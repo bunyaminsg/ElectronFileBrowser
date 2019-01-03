@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>File Browser</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.11.8/semantic.min.css"/>
+    <!--script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.11.8/semantic.min.js"></script-->
+    <style>
+      tr[path] {
+        cursor: pointer;
+      }
+
+      .messages {
+        position: absolute;
+        top: 4em;
+        padding: 1em;
+        width: 70vw;
+        left: 27vw;
+      }
+    </style>
+  </head>
+  <body>
+    <table id="file-nav" class="ui celled striped table">
+      <thead>
+        <tr><th colspan="3">
+          <button class="ui basic small circular icon button" id="back"><i class="up arrow icon"></i></button>
+          <button class="ui basic small circular icon button" id="home"><i class="home icon"></i></button>
+          <button class="ui basic small circular icon button" id="navigate-to"><i class="right arrow icon"></i></button>
+          <div class="ui breadcrumb" id="title" style="vertical-align: middle; display: inline;"></div>
+          <div class="ui input" style="width: 43%; display: none" id="navigate-wrapper">
+            <input id="navigate">
+          </div>
+	  <button class="ui right floated basic button" id="toggle_hidden">Show/Hide Hidden Files</button>
+	  <button class="ui right floated basic icon dropdown button" id="favourites"><i class="star icon"></i>
+            <div class="menu"></div>
+          </button>
+        </th></tr>
+        <tr>
+            <th style="width: 70%">Name</th>
+            <th class="collapsing">Size</th>
+            <th class="right aligned">Last Modified</th>
+        </tr></thead>
+      <tbody>
+      </tbody>
+    </table>
+
+    <div class="messages">
+    </div>
+    <!-- Insert this line above script imports  -->
+    <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.11.8/semantic.min.js"></script>
+    <script>$(".dropdown").dropdown()</script>
+    <!-- Insert this line after script imports -->
+    <script>if (window.module) module = window.module;</script>
+    <script>
+      // You can also require other files to run in this process
+      require('./renderer.js')
+    </script>
+  </body>
+</html>
