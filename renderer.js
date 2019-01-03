@@ -5,8 +5,23 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const execSync = require('child_process').execSync;
-const root = (os.platform == "win32") ? process.cwd().split(path.sep)[0] : "/"
+const root = (os.platform == "win32") ? process.cwd().split(path.sep)[0] + path.sep : "/"
 const $ = require("jquery");
+const fileTypes = require("./fileTypes");
+// const drivelist = require('drivelist');
+ 
+function getDrives() {
+  /*drivelist.list((error, drives) => {
+    if (error) {
+      throw error;
+    }
+ 
+    drives.forEach((drive) => {
+      console.log(drive);
+    });
+  });*/
+}
+
 
 const favourites = [
   {id: "root", name: "Root", path: root, icon: "hdd outline"},
@@ -30,9 +45,16 @@ function escapeHtml(unsafe) {
  }
 
 function escapePath(p) {
-  return p.replace(/ /g, "\\ ");
+  return /^win/i.test(process.platform) ? `"${p}"` : p.replace(/ /g, "\\ ");
 }
 
+function getType(p) {
+	return (fileTypes[path.extname(p).substring(1)] || '').split("\/")[0];
+}
+
+function getFileIcon(p) {
+	return 'file ' + (getType(p) || '') + ' outline';
+}
 
 Element.prototype.remove = function() {
     this.parentElement.removeChild(this);
@@ -108,13 +130,14 @@ function createBreadcrumbItems(dir) {
 function createRow(fileName, filePath, isFolder, fileSize, lastModified) {
     return `<tr folder="${isFolder}" path="${filePath}">
         <td>
-        <i class="${isFolder ? 'folder' : 'file outline'} icon"></i> ${fileName}
+        <i class="${isFolder ? 'folder' : getFileIcon(filePath)} icon"></i> ${fileName}
         </td>
         <td class="collapsing">${isFolder ? '' : fileSize}</td>
         <td class="right aligned">${lastModified}</td>
     </tr>`;
 }
 async function ls(dir, hide) {
+  getDrives();
   hideNavigator();
   document.getElementById("back").style.visibility = dir === root ? "hidden" : "visible";
   currentDir = dir;
@@ -134,19 +157,20 @@ async function ls(dir, hide) {
   // console.log(files);
   document.querySelector("#file-nav tbody").innerHTML = (await Promise.all(files.filter(file => !hide || !file.split(path.sep).slice(-1)[0].startsWith("\.")).map(async function (file) {
       const [fs_err, stats] = await promisify(fs.stat, [path.join(dir, file)]);
-      return [stats.isDirectory(), file, createRow(file, path.join(dir, file), stats.isDirectory(), fileSizeToString(stats.size), new Date(stats.mtime).toDateString())];
+      return [stats ? stats.isDirectory() : false, file, createRow(file, path.join(dir, file), stats ? stats.isDirectory() : false, fileSizeToString(stats ? stats.size : 0), stats ? new Date(stats.mtime).toDateString() : '')];
   }))).sort((f1,f2) => {
     if (f1[0] === f2[0]) return (f1[1].toLowerCase() < f2[1].toLowerCase()) ? -1 : 1;
     else if (f1[0]) return -1;
     else return 1;
-  }).map(_ => _[2]).join("");
+  }).map((_, index) => _[2].replace(/^<tr/, `<tr tabIndex="${index + 1}"`)).join("");
   document.querySelectorAll("tbody tr").forEach(elem => {
       if (elem.getAttribute("folder") === "true") {
           elem.onclick = () => ls(elem.getAttribute("path"), hide);
       } else {
           elem.onclick = () => {
             if (/^win/i.test(process.platform)) {
-                execSync("start " + escapePath(elem.getAttribute("path")));
+				console.log("start " + escapePath(elem.getAttribute("path")));
+                execSync("start \"\" " + escapePath(elem.getAttribute("path")));
             } else if (/^darwin/i.test(process.platform)) {
                 execSync("open " + escapePath(elem.getAttribute("path")));
             } else if (/^linux/i.test(process.platform)) {
@@ -178,6 +202,10 @@ $(window).on("keydown", (e) => {
   }
 });
 
+function trStartsWithKey(elem, key) {
+	return elem.children[0].innerHTML.split("</i>")[1].trim().toLowerCase().startsWith(key.toLowerCase());
+}
+
 $(window).on("keyup", (e) => {
   if (e.key.toLowerCase() === "h") {
     if (ctrlKey) console.log("hide hidden files");
@@ -187,6 +215,21 @@ $(window).on("keyup", (e) => {
     altKey = false;
   } else if (e.key.toLowerCase() === "shift") {
     shiftKey = false;
+  } else if (e.key.toLowerCase() === 'enter') {
+	if (document.querySelector("tr:focus")) {
+	  document.querySelector("tr:focus").onclick();
+	}
+  } else if (e.key.length === 1) {
+	let i = 0;
+	const focused = document.querySelector("tr[path][tabIndex]:focus");
+	const startsWithKey = Array.from(document.querySelectorAll("tr[path][tabIndex]")).filter((elem) => trStartsWithKey(elem, e.key) );
+	if (!startsWithKey.length) return;
+	console.log(focused, startsWithKey);
+	if (focused && trStartsWithKey(focused, e.key) && (focused.getAttribute("tabIndex") !== startsWithKey[startsWithKey.length - 1].getAttribute("tabIndex"))) {
+	  i = startsWithKey.indexOf(focused) + 1;
+	}
+	let selected = false;
+	startsWithKey[i].focus();
   }
 });
 
