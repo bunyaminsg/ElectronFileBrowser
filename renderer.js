@@ -9,13 +9,34 @@ const root = (os.platform == "win32") ? process.cwd().split(path.sep)[0] + path.
 const $ = require("jquery");
 const fileTypes = require("./fileTypes");
 // const drivelist = require('drivelist');
- 
-function getDrives() {
+
+async function getDrives() {
+  const drives = [];
+  if (!/^linux/i.test(process.platform)) return [];
+  const [rd_err, files] = await promisify(fs.readdir, [path.join('/media/', os.userInfo().username)]);
+  if (!rd_err && files) {
+    drives.push(...files.map(file => {
+      return {
+        label: file.length > 12 ? file.substring(0, 9) + '...' : file,
+        path: path.join('/media/', os.userInfo().username, file)
+      };
+    }))
+  }
+  const [rd_err2, files2] = await promisify(fs.readdir, ['/mnt']);
+  if (!rd_err2 && files2) {
+    drives.push(...files2.map(file => {
+      return {
+        label: file.length > 12 ? file.substring(0, 9) + '...' : file,
+        path: path.join('/mnt/', file)
+      };
+    }))
+  }
+  return drives;
   /*drivelist.list((error, drives) => {
     if (error) {
       throw error;
     }
- 
+
     drives.forEach((drive) => {
       console.log(drive);
     });
@@ -137,7 +158,14 @@ function createRow(fileName, filePath, isFolder, fileSize, lastModified) {
     </tr>`;
 }
 async function ls(dir, hide) {
-  getDrives();
+  const drives = await getDrives();
+  $("#favourites .menu a[id|=drive]").remove();
+  drives.forEach((drive, ind) => {
+    $("#favourites .menu").append(`<a class="item" id="drive-${ind}"><i class="usb icon"></i>${drive.label}</a>`);
+    $(`#drive-${ind}`).on("click", () => {
+      ls(drive.path, hideHidden);
+    });
+  });
   hideNavigator();
   document.getElementById("back").style.visibility = dir === root ? "hidden" : "visible";
   currentDir = dir;
