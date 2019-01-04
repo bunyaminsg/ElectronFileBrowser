@@ -10,7 +10,8 @@
     "start": "electron ."
   },
   "dependencies": {
-    "jquery": "^3.3.1"
+    "jquery": "^3.3.1",
+    "rxjs": "^6.3.3"
   },
   "devDependencies": {
     "electron": "^2.0.16"

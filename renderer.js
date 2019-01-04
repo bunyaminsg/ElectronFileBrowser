@@ -8,7 +8,61 @@ const execSync = require('child_process').execSync;
 const root = (os.platform == "win32") ? process.cwd().split(path.sep)[0] + path.sep : "/"
 const $ = require("jquery");
 const fileTypes = require("./fileTypes");
+const {Observable, Subject} = require("rxjs")
+const {take, takeUntil} = require("rxjs/operators")
 // const drivelist = require('drivelist');
+
+function keyToRegExp(key) {
+  return key.replace(/\*/g, ".*").replace(/\./g, "\\.");
+}
+
+window.srch = function search(p, key, completed) {
+  const found = new Subject();
+  const subscriptions = [];
+  fs.readdir(p, (err, files) => {
+    if (err) { completed.next(); return; }
+    files.filter(file => new RegExp(keyToRegExp(key), 'g').test(file)).forEach(file => found.next(file));
+    (() => {
+      return new Promise(resolve => {
+        let _async = files.length;
+        if (!_async) resolve();
+        files.forEach(file => {
+          fs.stat(path.join(p, file), (err, stats) => {
+            if (!err && stats.isDirectory() && !/.*\.asar$/.test(file)) {
+              const scomplete = new Subject();
+              subscriptions.push({
+//                path: path.join(p, file),
+                completed: scomplete,
+                subscription: search(path.join(p, file), key, scomplete).subscribe(x => found.next(x))
+              });
+            }
+            _async--;
+            if (!_async) resolve();
+          });
+        });
+      });
+    })().then(() => {
+      if (!subscriptions.length) { completed.next(); }
+      else {
+        subscriptions.forEach((subs, i, _subscriptions) => {
+          take(1)(subs.completed.asObservable()).subscribe(() => {
+            subs.subscription.unsubscribe();
+            _subscriptions.splice(_subscriptions.indexOf(subs), 1);
+            if (!_subscriptions.length) { completed.next(); }
+          });
+        });
+      }
+    })
+  });
+  return found.asObservable();
+}
+
+/*** Usage of search
+const s = new Subject();
+const start = new Date();
+(s.asObservable()).subscribe(() => console.log((((new Date()).getTime() - start.getTime())/1000.0)));
+srch("/home/bunyamin/temp/", "temp", s);
+*/
 
 async function getDrives() {
   const drives = [];
