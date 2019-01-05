@@ -16,11 +16,11 @@ function keyToRegExp(key) {
   return key.replace(/\*/g, ".*").replace(/\./g, "\\.");
 }
 
-window.srch = function search(p, key, completed) {
+function search(p, key, completed) {
   const found = new Subject();
   const subscriptions = [];
   fs.readdir(p, (err, files) => {
-    if (err) { completed.next(); return; }
+    if (err) { completed.next(1); return; }
     files.filter(file => new RegExp(keyToRegExp(key), 'g').test(file)).forEach(file => found.next(file));
     (() => {
       return new Promise(resolve => {
@@ -42,17 +42,26 @@ window.srch = function search(p, key, completed) {
         });
       });
     })().then(() => {
-      if (!subscriptions.length) { completed.next(); }
+      if (!subscriptions.length) { completed.next(1); }
       else {
         subscriptions.forEach((subs, i, _subscriptions) => {
           take(1)(subs.completed.asObservable()).subscribe(() => {
             subs.subscription.unsubscribe();
             _subscriptions.splice(_subscriptions.indexOf(subs), 1);
-            if (!_subscriptions.length) { completed.next(); }
+            if (!_subscriptions.length) { completed.next(1); }
           });
         });
       }
     })
+  });
+  const completeSubs = completed.asObservable().subscribe((id) => {
+    if (id !== 1) {
+      subscriptions.forEach((subs) => {
+        subs.subscription.unsubscribe();
+        subs.completed.next(0);
+      });
+      completeSubs.unsubscribe();
+    }
   });
   return found.asObservable();
 }
@@ -221,6 +230,7 @@ async function ls(dir, hide) {
     });
   });
   hideNavigator();
+  hideSearch();
   document.getElementById("back").style.visibility = dir === root ? "hidden" : "visible";
   currentDir = dir;
   document.querySelector("#file-nav tbody").innerHTML = "";
@@ -266,6 +276,35 @@ async function ls(dir, hide) {
   return;
 }
 
+let appendedIndex = 0;
+
+async function appendToNav(file) {
+  appendedIndex++;
+  $("#file-nav tbody").append((await (async function () {
+      const [fs_err, stats] = await promisify(fs.stat, [file]);
+      return [stats ? stats.isDirectory() : false, file, createRow(file.split(path.sep).slice(-1)[0], file, stats ? stats.isDirectory() : false, fileSizeToString(stats ? stats.size : 0), stats ? new Date(stats.mtime).toDateString() : '')];
+  })())[2].replace(/^<tr/, `<tr tabIndex="${appendedIndex}"`));
+  document.querySelectorAll(`tbody tr[path="${file}"]`).forEach(elem => {
+      if (elem.getAttribute("folder") === "true") {
+          elem.onclick = () => ls(elem.getAttribute("path"), hideHidden);
+      } else {
+          elem.onclick = () => {
+            if (/^win/i.test(process.platform)) {
+				console.log("start " + escapePath(elem.getAttribute("path")));
+                execSync("start \"\" " + escapePath(elem.getAttribute("path")));
+            } else if (/^darwin/i.test(process.platform)) {
+                execSync("open " + escapePath(elem.getAttribute("path")));
+            } else if (/^linux/i.test(process.platform)) {
+                execSync("xdg-open " + escapePath(elem.getAttribute("path")));
+            } else {
+                showError("Operating System Not Supported");
+            }
+          }
+      }
+  });
+  return;
+}
+
 async function main() {
     ls(os.homedir(), hideHidden);
 }
@@ -289,8 +328,11 @@ function trStartsWithKey(elem, key) {
 }
 
 $(window).on("keyup", (e) => {
-  if (e.key.toLowerCase() === "h") {
-    if (ctrlKey) console.log("hide hidden files");
+  if (ctrlKey && e.key.toLowerCase() === "h") {
+    hideHidden = !hideHidden;
+    ls(currentDir, hideHidden);
+  } else if (ctrlKey && e.key.toLowerCase() === 'f') {
+    showSearch();
   } else if (e.key.toLowerCase() === "control") {
     ctrlKey = false;
   } else if (e.key.toLowerCase() === "alt") {
@@ -298,20 +340,20 @@ $(window).on("keyup", (e) => {
   } else if (e.key.toLowerCase() === "shift") {
     shiftKey = false;
   } else if (e.key.toLowerCase() === 'enter') {
-	if (document.querySelector("tr:focus")) {
-	  document.querySelector("tr:focus").onclick();
-	}
-  } else if (e.key.length === 1) {
-	let i = 0;
-	const focused = document.querySelector("tr[path][tabIndex]:focus");
-	const startsWithKey = Array.from(document.querySelectorAll("tr[path][tabIndex]")).filter((elem) => trStartsWithKey(elem, e.key) );
-	if (!startsWithKey.length) return;
-	console.log(focused, startsWithKey);
-	if (focused && trStartsWithKey(focused, e.key) && (focused.getAttribute("tabIndex") !== startsWithKey[startsWithKey.length - 1].getAttribute("tabIndex"))) {
-	  i = startsWithKey.indexOf(focused) + 1;
-	}
-	let selected = false;
-	startsWithKey[i].focus();
+	  if (document.querySelector("tr:focus")) {
+	    document.querySelector("tr:focus").onclick();
+	  }
+  } else if (!ctrlKey && !altKey && !shiftKey && e.key.length === 1 && !$("input:focus").length) {
+  	let i = 0;
+  	const focused = document.querySelector("tr[path][tabIndex]:focus");
+  	const startsWithKey = Array.from(document.querySelectorAll("tr[path][tabIndex]")).filter((elem) => trStartsWithKey(elem, e.key) );
+  	if (!startsWithKey.length) return;
+  	console.log(focused, startsWithKey);
+  	if (focused && trStartsWithKey(focused, e.key) && (focused.getAttribute("tabIndex") !== startsWithKey[startsWithKey.length - 1].getAttribute("tabIndex"))) {
+  	  i = startsWithKey.indexOf(focused) + 1;
+  	}
+  	let selected = false;
+  	startsWithKey[i].focus();
   }
 });
 
@@ -347,6 +389,34 @@ function showNavigator() {
   $("#navigate").focus();
 }
 
+function showSearch() {
+  searchCompleted = new Subject();
+  $("#navigate-wrapper").css("display", "none");
+  $(".breadcrumb").css("display", "none");
+  $("#search-wrapper").css("display", "");
+  $("#search").focus();
+}
+
+function hideSearch() {
+  $("#navigate-wrapper").css("display", "none");
+  $(".breadcrumb").css("display", "");
+  $("#search-wrapper").css("display", "none");
+  if (searchCompleted) {
+    searchCompleted.next(0);
+  }
+}
+
+let searchCompleted;
+
+function listFound() {
+  appendedIndex = 0;
+  const key = $("#search").val();
+  $("#file-nav tbody").html("");
+  takeUntil(searchCompleted)(search(currentDir, key, searchCompleted)).subscribe(file => {
+    appendToNav(file);
+  });
+}
+
 $("#navigate-to").on("click", () => {
   showNavigator();
 });
@@ -359,6 +429,20 @@ $("#navigate").on("keyup", function (e) {
       break;
     case 'enter':
       ls($(this).val(), hideHidden);
+      break;
+  }
+});
+
+$("#search").on("keyup", function (e) {
+  e.preventDefault();
+  switch(e.key.toLowerCase()) {
+    case 'escape':
+      hideSearch();
+      ls(currentDir, hideHidden);
+      break;
+    case 'enter':
+      if ($("#search").val()) listFound();
+      else hideSearch();
       break;
   }
 });
