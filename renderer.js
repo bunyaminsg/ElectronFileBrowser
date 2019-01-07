@@ -16,7 +16,10 @@ function keyToRegExp(key) {
   return key.replace(/\*/g, ".*").replace(/\./g, "\\.");
 }
 
+const searchWrapper = $("#search-wrapper");
+
 function search(p, key, completed) {
+  if (searchWrapper.css("display") === "none") {completed.next(); return;}
   const found = new Subject();
   const subscriptions = [];
   fs.readdir(p, (err, files) => {
@@ -398,6 +401,7 @@ function showSearch() {
 }
 
 function hideSearch() {
+  $("#search").val("");
   $("#navigate-wrapper").css("display", "none");
   $(".breadcrumb").css("display", "");
   $("#search-wrapper").css("display", "none");
@@ -444,5 +448,14 @@ $("#search").on("keyup", function (e) {
       if ($("#search").val()) listFound();
       else hideSearch();
       break;
+  }
+});
+
+$("#search-button").on("click", function() {
+  if ($("#search-wrapper").css("display") === "none") {
+    showSearch();
+  } else {
+    hideSearch();
+    ls(currentDir, hideHidden);
   }
 });
