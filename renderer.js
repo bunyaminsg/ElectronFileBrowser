@@ -36,7 +36,7 @@ const menuItem = new MenuItem(
           icon: "star"
         };
         favourites.push(fav);
-        $("#favourites .menu").append(`<a class="item" id="fav-${fav.id}"><i class="${fav.icon} icon"></i>${fav.name}</a>`);
+        $("#favourites .menu").append(`<a data-tooltip="${fav.path}" data-position="right center" class="item" id="fav-${fav.id}"><i class="${fav.icon} icon"></i>${fav.name}</a>`);
         //$("#favourites").dropdown();
         $(`#fav-${fav.id}`).on("click", () => { ls(fav.path, hideHidden); });
       }
