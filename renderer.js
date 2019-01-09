@@ -10,6 +10,64 @@ const $ = require("jquery");
 const fileTypes = require("./fileTypes");
 const {Observable, Subject} = require("rxjs")
 const {take, takeUntil} = require("rxjs/operators")
+const { remote } = require('electron')
+const { Menu, MenuItem } = remote
+
+
+let isFileNavElement;
+let fileNavElement;
+
+const menu = new Menu()
+const menuItem = new MenuItem(
+  // {
+  //   label: 'Inspect Element',
+  //   click: () => {
+  //     remote.getCurrentWindow().inspectElement(rightClickPosition.x, rightClickPosition.y)
+  //   }
+  // },
+    {
+      label: 'Add To favourites',
+      visible: false,
+      click: (...args) => {
+        console.log(fileNavElement)
+        const fav = {id: "item-" + favourites.length,
+          name: $(fileNavElement).attr("path").split(path.sep).slice(-1)[0],
+          path: $(fileNavElement).attr("path"),
+          icon: "star"
+        };
+        favourites.push(fav);
+        $("#favourites .menu").append(`<a class="item" id="fav-${fav.id}"><i class="${fav.icon} icon"></i>${fav.name}</a>`);
+        //$("#favourites").dropdown();
+        $(`#fav-${fav.id}`).on("click", () => { ls(fav.path, hideHidden); });
+      }
+    }
+  )
+menu.append(menuItem)
+/*menu.on('menu-will-close', () => {
+  isFileNavElement = false;
+  fileNavElement = undefined;
+})*/
+
+window.addEventListener('contextmenu', (e) => {
+  e.preventDefault()
+  rightClickPosition = {x: e.x, y: e.y}
+  isFileNavElement = false;
+  fileNavElement = undefined;
+  let target = e.target;
+  if ($(target).is("#file-nav *")) {
+    while (target && !$(target).is("tr[path]")) {
+      target = target.parentElement;
+    }
+    if (target) {
+      isFileNavElement = true;
+      fileNavElement = target;
+    }
+  }
+  menuItem.visible = isFileNavElement;
+  // console.log(e);
+  menu.popup(remote.getCurrentWindow())
+}, false)
+
 // const drivelist = require('drivelist');
 
 function keyToRegExp(key) {
