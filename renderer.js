@@ -12,22 +12,22 @@ const {Observable, Subject} = require("rxjs")
 const {take, takeUntil} = require("rxjs/operators")
 const { remote } = require('electron')
 const { Menu, MenuItem } = remote
-
+const trash = require('trash');
 
 let isFileNavElement;
 let fileNavElement;
 
 const menu = new Menu()
-const menuItem = new MenuItem(
-  // {
-  //   label: 'Inspect Element',
-  //   click: () => {
-  //     remote.getCurrentWindow().inspectElement(rightClickPosition.x, rightClickPosition.y)
-  //   }
-  // },
+const menuItems = [
+  /*new MenuItem({
+    label: 'Inspect Element',
+    click: () => {
+      remote.getCurrentWindow().inspectElement(rightClickPosition.x, rightClickPosition.y)
+    }
+  }),*/
+  new MenuItem(
     {
       label: 'Add To favourites',
-      visible: false,
       click: (...args) => {
         console.log(fileNavElement)
         const fav = {id: "item-" + favourites.length,
@@ -41,8 +41,29 @@ const menuItem = new MenuItem(
         $(`#fav-${fav.id}`).on("click", () => { ls(fav.path, hideHidden); });
       }
     }
+  ),
+  new MenuItem(
+    {
+      label: 'Remove',
+      click: (...args) => {
+        const pathToRemove = $(fileNavElement).attr("path");
+        trash([pathToRemove]).then((trashPath) => {
+          // trashPath => [{ "path": <path_to_file_in_trash>, "info": <path_to_info_of_file_in_trash> }
+          console.log(trashPath);
+          favourites.forEach((fav, i, arr) => {
+            if (fav.path === pathToRemove) {
+              arr.splice(i, 1);
+            }
+          });
+          $(fileNavElement).remove();
+        }, (err) => {
+          showError(err);
+        });
+      }
+    }
   )
-menu.append(menuItem)
+];
+menuItems.forEach(menuItem => menu.append(menuItem));
 /*menu.on('menu-will-close', () => {
   isFileNavElement = false;
   fileNavElement = undefined;
@@ -63,9 +84,9 @@ window.addEventListener('contextmenu', (e) => {
       fileNavElement = target;
     }
   }
-  menuItem.visible = isFileNavElement;
-  // console.log(e);
-  menu.popup(remote.getCurrentWindow())
+  if (isFileNavElement) {
+    menu.popup(remote.getCurrentWindow())
+  }
 }, false)
 
 // const drivelist = require('drivelist');
