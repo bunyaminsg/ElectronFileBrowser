@@ -61,6 +61,41 @@ const menuItems = [
         });
       }
     }
+  ),
+  new MenuItem(
+    {
+      label: 'New Document',
+      click: (...args) => {
+        $("#file-nav tbody").append(`<tr id="nfn-wrapper"><td id="new-file-name" colspan="999" contentEditable="true"></td></tr>`);
+        $("#new-file-name").focus();
+        $("#new-file-name")
+          .on("blur", (e) => {
+            e.preventDefault();
+            $("#new-file-name").focus();
+          })
+          .on("keyup", async (e) => {
+            e.preventDefault();
+            switch (e.key.toLowerCase()) {
+              case 'enter':
+                const filePath = path.join(currentDir, $("#new-file-name").html().replace(/^([^<]*).*$/, "$1"));
+                fs.writeFile(filePath, "", async (err) => {
+                  if (err) {
+                    showError(err);
+                  }
+                  $("#nfn-wrapper").remove();
+                  await ls(currentDir, hideHidden);
+                  $(`tr[path="${filePath}"]`).focus();
+                });
+                break;
+              case 'escape':
+                $("#nfn-wrapper").remove();
+                break;
+              default:
+
+            }
+          });
+      }
+    }
   )
 ];
 menuItems.forEach(menuItem => menu.append(menuItem));
@@ -302,6 +337,13 @@ function createRow(fileName, filePath, isFolder, fileSize, lastModified) {
         <td class="right aligned">${lastModified}</td>
     </tr>`;
 }
+
+function selectFile(elem) {
+  if (!ctrlKey) return false;
+  $(elem).toggleClass("ui error");
+  return true;
+}
+
 async function ls(dir, hide) {
   const drives = await getDrives();
   $("#favourites .menu a[id|=drive]").remove();
@@ -337,11 +379,13 @@ async function ls(dir, hide) {
     else if (f1[0]) return -1;
     else return 1;
   }).map((_, index) => _[2].replace(/^<tr/, `<tr tabIndex="${index + 1}"`)).join("");
-  document.querySelectorAll("tbody tr").forEach(elem => {
+
+  document.querySelectorAll("#file-nav tbody tr").forEach(elem => {
       if (elem.getAttribute("folder") === "true") {
-          elem.onclick = () => ls(elem.getAttribute("path"), hide);
+          elem.onclick = () => selectFile(elem) || ls(elem.getAttribute("path"), hide);
       } else {
           elem.onclick = () => {
+            if (selectFile(elem)) return;
             if (/^win/i.test(process.platform)) {
 				console.log("start " + escapePath(elem.getAttribute("path")));
                 execSync("start \"\" " + escapePath(elem.getAttribute("path")));
@@ -400,7 +444,7 @@ $(window).on("keydown", (e) => {
     altKey = true;
   } else if (e.key.toLowerCase() === "shift") {
     shiftKey = true;
-  } else if (e.key.toLowerCase() === "backspace" && !$("input:focus").length) {
+  } else if (e.key.toLowerCase() === "backspace" && !$("input:focus, *[contentEditable]:focus").length) {
     ls(currentDir.split(path.sep).slice(0, -1).join(path.sep) || root, hideHidden);
   }
 });
@@ -425,7 +469,7 @@ $(window).on("keyup", (e) => {
 	  if (document.querySelector("tr:focus")) {
 	    document.querySelector("tr:focus").onclick();
 	  }
-  } else if (!ctrlKey && !altKey && !shiftKey && e.key.length === 1 && !$("input:focus").length) {
+  } else if (!ctrlKey && !altKey && !shiftKey && e.key.length === 1 && !$("input:focus, *[contentEditable]:focus").length) {
   	let i = 0;
   	const focused = document.querySelector("tr[path][tabIndex]:focus");
   	const startsWithKey = Array.from(document.querySelectorAll("tr[path][tabIndex]")).filter((elem) => trStartsWithKey(elem, e.key) );
@@ -449,6 +493,10 @@ document.getElementById("back").onclick = function() {
 
 document.getElementById("home").onclick = function() {
     ls(os.homedir(), hideHidden);
+}
+
+document.getElementById("refresh").onclick = function() {
+    ls(currentDir, hideHidden);
 }
 
 main();
