@@ -1,10 +1,15 @@
 const trash = require('trash');
+const favourites = require("../components/favourites");
+const path = require("path");
+const fs = require("fs");
+const showError = require("./common").showError;
+const { remote } = require('electron');
 
 exports.removeFile = function(pathToRemove) {
   trash([pathToRemove]).then((trashPath) => {
     // trashPath => [{ "path": <path_to_file_in_trash>, "info": <path_to_info_of_file_in_trash> }
     // console.log(trashPath);
-    favourites.forEach((fav, i, arr) => {
+    favourites.favourites.forEach((fav, i, arr) => {
       if (fav.path === pathToRemove) {
         arr.splice(i, 1);
       }
@@ -13,7 +18,43 @@ exports.removeFile = function(pathToRemove) {
   }, (err) => {
     showError(err);
   });
-}
+};
+
+exports.newFile = async function () {
+  return new Promise(success => {
+    const $newFileName = $("#new-file-name");
+    $("#file-nav").find("tbody").append(`<tr id="nfn-wrapper"><td id="new-file-name" colspan="999" contentEditable="true"></td></tr>`);
+    $newFileName.focus();
+    $newFileName
+      .on("blur", (e) => {
+        e.preventDefault();
+        $("#new-file-name").focus();
+      })
+      .on("keyup", async (e) => {
+        e.preventDefault();
+        switch (e.key.toLowerCase()) {
+          case 'enter':
+            const filePath = path.join(remote.getGlobal("current_dir"), $newFileName.html().replace(/^([^<]*).*$/, "$1"));
+            fs.writeFile(filePath, "", async (err) => {
+              if (err) {
+                showError(err);
+                success(false);
+              } else {
+                success(true);
+              }
+              $("#nfn-wrapper").remove();
+              $(`tr[path="${filePath}"]`).focus();
+            });
+            break;
+          case 'escape':
+            $("#nfn-wrapper").remove();
+            success(false);
+            break;
+          default:
+        }
+      });
+  });
+};
 
 exports.getDrives = async function() {
   const drives = [];
@@ -37,4 +78,4 @@ exports.getDrives = async function() {
     }))
   }
   return drives;
-}
+};

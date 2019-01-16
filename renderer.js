@@ -3,8 +3,9 @@
 // All of the Node.js APIs are available in this process.
 const path = require("path");
 const os = require("os");
-const root = (os.platform == "win32") ? process.cwd().split(path.sep)[0] + path.sep : "/"
+const root = (os.platform == "win32") ? process.cwd().split(path.sep)[0] + path.sep : "/";
 const $ = require("jquery");
+const ls = require("./components/navigator").ls;
 
 const { ipcRenderer, remote } = require( "electron" );
 
@@ -17,16 +18,18 @@ let hideHidden = false;
 
 ipcRenderer.sendSync("setGlobal", ["current_dir", currentDir]);
 
+const $toggleHidden = $("#toggle_hidden");
+
 if (/^linux/i.test(process.platform)) {
   hideHidden = true;
-  $("#toggle_hidden").html("Show Hidden Files");
-  $("#toggle_hidden").on("click", () => {
+  $toggleHidden.html("Show Hidden Files");
+  $toggleHidden.on("click", () => {
     hideHidden = !hideHidden;
-    $("#toggle_hidden").html(hideHidden ? "Show Hidden Files" : "Hide Hidden Files");
+    $toggleHidden.html(hideHidden ? "Show Hidden Files" : "Hide Hidden Files");
     ls(currentDir, hideHidden);
   });
 } else {
-  $("#toggle_hidden").remove();
+  $toggleHidden.remove();
 }
 
 function createBreadcrumbItems(dir) {
@@ -56,15 +59,15 @@ document.getElementById("back").onclick = function() {
         console.log(currentDir.split(path.sep).slice(0, -1).join(path.sep));
         ls(currentDir.split(path.sep).slice(0, -1).join(path.sep) || root, hideHidden);
     }
-}
+};
 
 document.getElementById("home").onclick = function() {
     ls(os.homedir(), hideHidden);
-}
+};
 
 document.getElementById("refresh").onclick = function() {
     ls(currentDir, hideHidden);
-}
+};
 
 main();
 
