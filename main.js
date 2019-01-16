@@ -1,7 +1,10 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron')
-const path = require('path')
-const url = require('url')
+const {app, BrowserWindow} = require('electron');
+const { ipcMain } = require( "electron" );
+
+ipcMain.on( "setGlobal", ( event, global_var) => {
+  global[global_var[0]] = global_var[1];
+} );
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
