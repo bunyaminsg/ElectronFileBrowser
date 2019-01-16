@@ -4,6 +4,7 @@ const execSync = require("child_process").execSync;
 const {promisify, showError, fileSizeToString, escapePath} = require("../util/common");
 const fileTypes = require("../fileTypes");
 const fs = require("fs");
+const breadcrumb = require("./breadcrumb");
 const hideSearch = require("./search").hideSearch;
 const { ipcRenderer, remote } = require( "electron" );
 
@@ -62,18 +63,16 @@ async function ls(dir, hide) {
   });
   hideNavigator();
   hideSearch();
-  document.getElementById("back").style.visibility = dir === root ? "hidden" : "visible";
+  document.getElementById("back").style.visibility = dir === remote.getGlobal("root_dir") ? "hidden" : "visible";
   ipcRenderer.sendSync("setGlobal", ["current_dir", dir]);
   document.querySelector("#file-nav tbody").innerHTML = "";
-  document.getElementById("title").innerHTML = createBreadcrumbItems(dir);
-  document.querySelectorAll(".breadcrumb a[path]").forEach(item => item.onclick = function() {
-      console.log(item);
-      ls(item.getAttribute("path"), hide);
+  breadcrumb.init(dir, (item) => {
+    ls(item.getAttribute("path"), hide);
   });
   const [rd_err, files] = await promisify(fs.readdir, [dir]);
   if (rd_err) {
     showError(rd_err);
-    ls(dir.split(path.sep).slice(0, -1).join(path.sep) || root, hide);
+    ls(dir.split(path.sep).slice(0, -1).join(path.sep) || remote.getGlobal("root_dir"), hide);
     return;
   }
 

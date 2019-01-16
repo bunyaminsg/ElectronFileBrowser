@@ -1,3 +1,4 @@
+const {remote} = require("electron");
 const os = require("os");
 const path = require("path");
 const $ = require("jquery");
@@ -5,7 +6,7 @@ const ls = require("./navigator").ls;
 const uuid = require("uuid");
 
 const favourites = [
-  {id: "root", name: "Root", path: root, icon: "hdd outline"},
+  {id: "root", name: "Root", path: remote.getGlobal("root_dir"), icon: "hdd outline"},
   {id: "home", name: "Home", path: os.homedir(), icon: "home"},
   {id: "desktop", name: "Desktop", path: path.join(os.homedir(), "Desktop"), icon: "desktop"},
   {id: "downloads", name: "Downloads", path: path.join(os.homedir(), "Downloads"), icon: "download"}

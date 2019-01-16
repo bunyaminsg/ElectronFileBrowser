@@ -11,11 +11,12 @@ const { ipcRenderer, remote } = require( "electron" );
 
 Element.prototype.remove = function() {
     this.parentElement.removeChild(this);
-}
+};
 
 let currentDir = root;
 let hideHidden = false;
 
+ipcRenderer.sendSync("setGlobal", ["root_dir", root]);
 ipcRenderer.sendSync("setGlobal", ["current_dir", currentDir]);
 
 const $toggleHidden = $("#toggle_hidden");
@@ -30,24 +31,6 @@ if (/^linux/i.test(process.platform)) {
   });
 } else {
   $toggleHidden.remove();
-}
-
-function createBreadcrumbItems(dir) {
-    const subpath = dir.split(path.sep);
-    let content = '';
-    (subpath && subpath.length ? subpath : [root]).forEach((spath, index) => {
-        console.log(subpath, index);
-        if (index === 0 && !spath.length) {
-            content += `<a path="${root}" class="section"><i class = "hdd outline icon"></i></a>`;
-            content += `<div class="divider">${escapeHtml(path.sep)}</div>`
-        } else if (index === (((subpath && subpath.length) ? subpath.length : 1) - 1)) {
-            content += `<div class="active section">${escapeHtml(spath)}</div>`;
-        } else {
-            content += `<a path="${path.join(root, path.join(...subpath.slice(1, index+1)))}" class="section">${escapeHtml(spath)}</a>`;
-            content += `<div class="divider">${escapeHtml(path.sep)}</div>`
-        }
-    });
-    return content;
 }
 
 async function main() {

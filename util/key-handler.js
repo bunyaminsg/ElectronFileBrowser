@@ -1,3 +1,6 @@
+const path = require("path");
+const ls = require("../components/navigator").ls;
+const {remote} = require("electron");
 let ctrlKey = false, shiftKey = false, altKey = false;
 
 $(window).on("keydown", (e) => {
@@ -8,7 +11,7 @@ $(window).on("keydown", (e) => {
   } else if (e.key.toLowerCase() === "shift") {
     shiftKey = true;
   } else if (e.key.toLowerCase() === "backspace" && !$("input:focus, *[contentEditable]:focus").length) {
-    ls(currentDir.split(path.sep).slice(0, -1).join(path.sep) || root, hideHidden);
+    ls(remote.getGlobal("current_dir").split(path.sep).slice(0, -1).join(path.sep) || remote.getGlobal("root_dir"), hideHidden);
   }
 });
 
@@ -19,7 +22,7 @@ function trStartsWithKey(elem, key) {
 $(window).on("keyup", (e) => {
   if (ctrlKey && e.key.toLowerCase() === "h") {
     hideHidden = !hideHidden;
-    ls(currentDir, hideHidden);
+    ls(remote.getGlobal("current_dir"), hideHidden);
   } else if (ctrlKey && e.key.toLowerCase() === 'f') {
     showSearch();
   } else if (e.key.toLowerCase() === "control") {
