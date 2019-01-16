@@ -1,17 +1,21 @@
 const fs = require("fs");
 const path = require("path");
-const {Subject} = require("rxjs")
-const {take, takeUntil} = require("rxjs/operators")
-
-const searchWrapper = $("#search-wrapper");
+const {Subject} = require("rxjs");
+const {take, takeUntil} = require("rxjs/operators");
+const {remote} = require("electron");
+const $ = require("jquery");
+const bindClickEvents = require("./navigator").bindClickEvents;
 
 let searchCompleted;
+
+let appendedIndex = 0;
 
 function keyToRegExp(key) {
   return key.replace(/\*/g, ".*").replace(/\./g, "\\.");
 }
 
 function search (p, key, completed) {
+  const searchWrapper = $("#search-wrapper");
   if (searchWrapper.css("display") === "none") {completed.next(); return;}
   const found = new Subject();
   const subscriptions = [];
@@ -91,36 +95,48 @@ function listFound() {
   appendedIndex = 0;
   const key = $("#search").val();
   $("#file-nav tbody").html("");
-  takeUntil(searchCompleted)(search(currentDir, key, searchCompleted)).subscribe(file => {
+  takeUntil(searchCompleted)(search(remote.getGlobal("current_dir"), key, searchCompleted)).subscribe(file => {
     appendToNav(file);
   });
 }
 
-$("#search").on("keyup", function (e) {
-  e.preventDefault();
-  switch(e.key.toLowerCase()) {
-    case 'escape':
-      hideSearch();
-      ls(currentDir, hideHidden);
-      break;
-    case 'enter':
-      if ($("#search").val()) listFound();
-      else hideSearch();
-      break;
-  }
-});
+async function appendToNav(file) {
+  appendedIndex++;
+  $("#file-nav").find("tbody").append((await (async function () {
+    const [fs_err, stats] = await promisify(fs.stat, [file]);
+    return [stats ? stats.isDirectory() : false, file, createRow(file.split(path.sep).slice(-1)[0], file, stats ? stats.isDirectory() : false, fileSizeToString(stats ? stats.size : 0), stats ? new Date(stats.mtime).toDateString() : '')];
+  })())[2].replace(/^<tr/, `<tr tabIndex="${appendedIndex}"`));
+  bindClickEvents(file);
+}
 
-$("#search-button").on("click", function() {
-  if ($("#search-wrapper").css("display") === "none") {
-    showSearch();
-  } else {
-    hideSearch();
-    ls(currentDir, hideHidden);
-  }
-});
+function init() {
+  $("#search").on("keyup", function (e) {
+    e.preventDefault();
+    switch(e.key.toLowerCase()) {
+      case 'escape':
+        hideSearch();
+        ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
+        break;
+      case 'enter':
+        if ($("#search").val()) listFound();
+        else hideSearch();
+        break;
+    }
+  });
+
+  $("#search-button").on("click", function() {
+    if ($("#search-wrapper").css("display") === "none") {
+      showSearch();
+    } else {
+      hideSearch();
+      ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
+    }
+  });
+}
 
 module.exports = {
   search: search,
   showSearch: showSearch,
-  hideSearch: hideSearch
+  hideSearch: hideSearch,
+  init: init
 };

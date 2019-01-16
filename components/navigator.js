@@ -5,8 +5,16 @@ const {promisify, showError, fileSizeToString, escapePath} = require("../util/co
 const fileTypes = require("../fileTypes");
 const fs = require("fs");
 const breadcrumb = require("./breadcrumb");
-const hideSearch = require("./search").hideSearch;
+const getDrives = require("../util/file-operations").getDrives;
 const { ipcRenderer, remote } = require( "electron" );
+const { OS, getOS } = require("../util/operating-system");
+
+function hideSearch() {
+  $("#search").val("");
+  $("#navigate-wrapper").css("display", "none");
+  $(".breadcrumb").css("display", "");
+  $("#search-wrapper").css("display", "none");
+}
 
 function getType(p) {
   return (fileTypes[path.extname(p).substring(1)] || '').split("\/")[0];
@@ -30,22 +38,6 @@ function showNavigator() {
   $navigate.focus();
 }
 
-$("#navigate-to").on("click", () => {
-  showNavigator();
-});
-
-$("#navigate").on("keyup", function (e) {
-  e.preventDefault();
-  switch(e.key.toLowerCase()) {
-    case 'escape':
-      hideNavigator();
-      break;
-    case 'enter':
-      ls($(this).val(), hideHidden);
-      break;
-  }
-});
-
 function selectFile(elem) {
   if (!ctrlKey) return false;
   $(elem).toggleClass("ui error");
@@ -58,7 +50,7 @@ async function ls(dir, hide) {
   drives.forEach((drive, ind) => {
     $("#favourites").find(".menu").append(`<a class="item" id="drive-${ind}"><i class="usb icon"></i>${drive.label}</a>`);
     $(`#drive-${ind}`).on("click", () => {
-      ls(drive.path, hideHidden);
+      ls(drive.path, remote.getGlobal("hideHidden"));
     });
   });
   hideNavigator();
@@ -86,54 +78,49 @@ async function ls(dir, hide) {
     else return 1;
   }).map((_, index) => _[2].replace(/^<tr/, `<tr tabIndex="${index + 1}"`)).join("");
 
-  document.querySelectorAll("#file-nav tbody tr").forEach(elem => {
-      if (elem.getAttribute("folder") === "true") {
-          elem.onclick = () => selectFile(elem) || ls(elem.getAttribute("path"), hide);
-      } else {
-          elem.onclick = () => {
-            if (selectFile(elem)) return;
-            if (/^win/i.test(process.platform)) {
-				console.log("start " + escapePath(elem.getAttribute("path")));
-                execSync("start \"\" " + escapePath(elem.getAttribute("path")));
-            } else if (/^darwin/i.test(process.platform)) {
-                execSync("open " + escapePath(elem.getAttribute("path")));
-            } else if (/^linux/i.test(process.platform)) {
-                execSync("xdg-open " + escapePath(elem.getAttribute("path")));
-            } else {
-                showError("Operating System Not Supported");
-            }
-          }
+  bindClickEvents();
+}
+
+function bindClickEvents(file) {
+  document.querySelectorAll(file ? `tbody tr[path="${file}"]` : '#file-nav tbody tr[path]').forEach(elem => {
+    if (elem.getAttribute("folder") === "true") {
+      elem.onclick = () => ls(elem.getAttribute("path"), remote.getGlobal("hideHidden"));
+    } else {
+      elem.onclick = () => {
+        switch (getOS())  {
+          case OS.LINUX:
+            execSync("xdg-open " + escapePath(elem.getAttribute("path")));
+            break;
+          case OS.MAC:
+            execSync("open " + escapePath(elem.getAttribute("path")));
+            break;
+          case OS.WINDOWS:
+            execSync("start \"\" " + escapePath(elem.getAttribute("path")));
+            break;
+          default:
+            showError("Operating System Not Supported");
+        }
       }
+    }
   });
 }
 
-let appendedIndex = 0;
-
-async function appendToNav(file) {
-  appendedIndex++;
-  $("#file-nav").find("tbody").append((await (async function () {
-      const [fs_err, stats] = await promisify(fs.stat, [file]);
-      return [stats ? stats.isDirectory() : false, file, createRow(file.split(path.sep).slice(-1)[0], file, stats ? stats.isDirectory() : false, fileSizeToString(stats ? stats.size : 0), stats ? new Date(stats.mtime).toDateString() : '')];
-  })())[2].replace(/^<tr/, `<tr tabIndex="${appendedIndex}"`));
-  document.querySelectorAll(`tbody tr[path="${file}"]`).forEach(elem => {
-      if (elem.getAttribute("folder") === "true") {
-          elem.onclick = () => ls(elem.getAttribute("path"), hideHidden);
-      } else {
-          elem.onclick = () => {
-            if (/^win/i.test(process.platform)) {
-				console.log("start " + escapePath(elem.getAttribute("path")));
-                execSync("start \"\" " + escapePath(elem.getAttribute("path")));
-            } else if (/^darwin/i.test(process.platform)) {
-                execSync("open " + escapePath(elem.getAttribute("path")));
-            } else if (/^linux/i.test(process.platform)) {
-                execSync("xdg-open " + escapePath(elem.getAttribute("path")));
-            } else {
-                showError("Operating System Not Supported");
-            }
-          }
-      }
+function init() {
+  $("#navigate-to").on("click", () => {
+    showNavigator();
   });
-  return;
+
+  $("#navigate").on("keyup", function (e) {
+    e.preventDefault();
+    switch(e.key.toLowerCase()) {
+      case 'escape':
+        hideNavigator();
+        break;
+      case 'enter':
+        ls($(this).val(), remote.getGlobal("hideHidden"));
+        break;
+    }
+  });
 }
 
 function createRow(fileName, filePath, isFolder, fileSize, lastModified) {
@@ -146,4 +133,8 @@ function createRow(fileName, filePath, isFolder, fileSize, lastModified) {
     </tr>`;
 }
 
-exports.ls = ls;
+module.exports = {
+  init: init,
+  ls: ls,
+  bindClickEvents: bindClickEvents
+};

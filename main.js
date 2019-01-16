@@ -4,9 +4,10 @@ const { ipcMain } = require( "electron" );
 
 ipcMain.on( "setGlobal", ( event, global_var) => {
   global[global_var[0]] = global_var[1];
+  event.returnValue = 1;
 } );
 
-global.favourites = require("./components/favourites");
+// global.favourites = require("./components/favourites");
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.

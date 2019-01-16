@@ -1,15 +1,14 @@
 const trash = require('trash');
-const favourites = require("../components/favourites");
 const path = require("path");
 const fs = require("fs");
 const showError = require("./common").showError;
 const { remote } = require('electron');
 
-exports.removeFile = function(pathToRemove) {
+function removeFile(pathToRemove) {
   trash([pathToRemove]).then((trashPath) => {
     // trashPath => [{ "path": <path_to_file_in_trash>, "info": <path_to_info_of_file_in_trash> }
     // console.log(trashPath);
-    favourites.favourites.forEach((fav, i, arr) => {
+    remote.getGlobal("favourites").favourites.forEach((fav, i, arr) => {
       if (fav.path === pathToRemove) {
         arr.splice(i, 1);
       }
@@ -18,9 +17,9 @@ exports.removeFile = function(pathToRemove) {
   }, (err) => {
     showError(err);
   });
-};
+}
 
-exports.newFile = async function () {
+async function newFile() {
   return new Promise(success => {
     const $newFileName = $("#new-file-name");
     $("#file-nav").find("tbody").append(`<tr id="nfn-wrapper"><td id="new-file-name" colspan="999" contentEditable="true"></td></tr>`);
@@ -32,6 +31,7 @@ exports.newFile = async function () {
       })
       .on("keyup", async (e) => {
         e.preventDefault();
+        console.log(e);
         switch (e.key.toLowerCase()) {
           case 'enter':
             const filePath = path.join(remote.getGlobal("current_dir"), $newFileName.html().replace(/^([^<]*).*$/, "$1"));
@@ -54,9 +54,9 @@ exports.newFile = async function () {
         }
       });
   });
-};
+}
 
-exports.getDrives = async function() {
+async function getDrives() {
   const drives = [];
   if (!/^linux/i.test(process.platform)) return [];
   const [rd_err, files] = await promisify(fs.readdir, [path.join('/media/', os.userInfo().username)]);
@@ -78,4 +78,10 @@ exports.getDrives = async function() {
     }))
   }
   return drives;
+}
+
+module.exports = {
+  removeFile: removeFile,
+  newFile: newFile,
+  getDrives: getDrives
 };

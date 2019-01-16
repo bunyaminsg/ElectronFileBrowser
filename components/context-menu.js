@@ -1,10 +1,11 @@
 const { remote } = require('electron');
 const { Menu, MenuItem } = remote;
 const path = require("path");
-const favourites = remote.getGlobal("favourites");
+let favourites;
 const newFile = require("../util/file-operations").newFile;
 const removeFile = require("../util/file-operations").removeFile;
 const ls = require("../components/navigator").ls;
+const $ = require("jquery");
 
 let isFileNavElement;
 let fileNavElement;
@@ -34,7 +35,7 @@ const newDocumentMenuItem = new MenuItem(
     click: async (...args) => {
       const success = await newFile();
       if (success) {
-        ls(remote.getGlobal("current_dir"), hideHidden);
+        ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
       }
     }
   }
@@ -49,22 +50,30 @@ const menuItems = [
 ];
 menuItems.forEach(menuItem => menu.append(menuItem));
 
-window.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
-  rightClickPosition = {x: e.x, y: e.y};
-  isFileNavElement = false;
-  fileNavElement = undefined;
-  let target = e.target;
-  if ($(target).is("#file-nav *")) {
-    while (target && !$(target).is("tr[path]")) {
-      target = target.parentElement;
+function init() {
+  favourites = remote.getGlobal("favourites");
+  console.log(favourites);
+  window.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    rightClickPosition = {x: e.x, y: e.y};
+    isFileNavElement = false;
+    fileNavElement = undefined;
+    let target = e.target;
+    if ($(target).is("#file-nav *")) {
+      while (target && !$(target).is("tr[path]")) {
+        target = target.parentElement;
+      }
+      if (target) {
+        isFileNavElement = true;
+        fileNavElement = target;
+      }
     }
-    if (target) {
-      isFileNavElement = true;
-      fileNavElement = target;
+    if (isFileNavElement) {
+      menu.popup(remote.getCurrentWindow())
     }
-  }
-  if (isFileNavElement) {
-    menu.popup(remote.getCurrentWindow())
-  }
-}, false);
+  }, false);
+}
+
+module.exports = {
+  init: init
+};
