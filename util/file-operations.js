@@ -2,7 +2,9 @@ const trash = require('trash');
 const path = require("path");
 const fs = require("fs");
 const showError = require("./common").showError;
+const promisify = require("./common").promisify;
 const { remote } = require('electron');
+const os = require("os")
 
 function removeFile(pathToRemove) {
   trash([pathToRemove]).then((trashPath) => {

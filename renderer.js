@@ -12,6 +12,7 @@ const search = require("./components/search");
 const navigator = require("./components/navigator");
 const favourites = require("./components/favourites");
 const ls = require("./components/navigator").ls;
+const keyHandler = require('./util/key-handler');
 
 // console.log(favourites);
 
@@ -46,6 +47,7 @@ async function main() {
   contextMenu.init();
   search.init();
   favourites.init();
+  keyHandler.init();
   ls(os.homedir(), remote.getGlobal("hideHidden"));
 }
 
