@@ -10,12 +10,13 @@ function removeFile(pathToRemove) {
   trash([pathToRemove]).then((trashPath) => {
     // trashPath => [{ "path": <path_to_file_in_trash>, "info": <path_to_info_of_file_in_trash> }
     // console.log(trashPath);
-    remote.getGlobal("favourites").favourites.forEach((fav, i, arr) => {
+    console.log(remote.getGlobal("providers"));
+    remote.getGlobal("providers").favourites.favourites.forEach((fav, i, arr) => {
       if (fav.path === pathToRemove) {
         arr.splice(i, 1);
       }
     });
-    $(`*[path=${pathToRemove}]`).remove();
+    $(`*[path="${pathToRemove}"]`).remove();
   }, (err) => {
     showError(err);
   });

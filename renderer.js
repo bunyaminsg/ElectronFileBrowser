@@ -24,7 +24,8 @@ Element.prototype.remove = function() {
 
 ipcRenderer.sendSync("setGlobal", ["root_dir", root]);
 ipcRenderer.sendSync("setGlobal", ["current_dir", root]);
-ipcRenderer.sendSync("setGlobal", ["favourites", favourites]);
+remote.getGlobal("providers").favourites = favourites;
+console.log(remote.getGlobal("providers"));
 
 const $toggleHidden = $("#toggle_hidden");
 

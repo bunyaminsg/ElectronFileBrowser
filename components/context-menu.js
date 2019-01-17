@@ -1,7 +1,7 @@
 const { remote } = require('electron');
 const { Menu, MenuItem } = remote;
 const path = require("path");
-const favourites = require('./favourites');
+let favourites;
 const newFile = require("../util/file-operations").newFile;
 const removeFile = require("../util/file-operations").removeFile;
 const ls = require("../components/navigator").ls;
@@ -51,6 +51,7 @@ const menuItems = [
 menuItems.forEach(menuItem => menu.append(menuItem));
 
 function init() {
+  favourites = remote.getGlobal("providers").favourites;
   window.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     rightClickPosition = {x: e.x, y: e.y};
