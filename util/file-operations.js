@@ -23,8 +23,8 @@ function removeFile(pathToRemove) {
 
 async function newFile() {
   return new Promise(success => {
-    const $newFileName = $("#new-file-name");
     $("#file-nav").find("tbody").append(`<tr id="nfn-wrapper"><td id="new-file-name" colspan="999" contentEditable="true"></td></tr>`);
+    const $newFileName = $("#new-file-name");
     $newFileName.focus();
     $newFileName
       .on("blur", (e) => {
@@ -34,6 +34,14 @@ async function newFile() {
       .on("keyup", async (e) => {
         e.preventDefault();
         console.log(e);
+        switch (e.key.toLowerCase()) {
+          case 'enter':
+          case 'escape':
+            $newFileName.off("blur");
+            $newFileName.off("keyup");
+            break;
+          default:
+        }
         switch (e.key.toLowerCase()) {
           case 'enter':
             const filePath = path.join(remote.getGlobal("current_dir"), $newFileName.html().replace(/^([^<]*).*$/, "$1"));

@@ -4,7 +4,6 @@ const { ipcMain } = require( "electron" );
 
 ipcMain.on( "setGlobal", ( event, global_var) => {
   global[global_var[0]] = global_var[1];
-  console.log(global_var);
   event.returnValue = 1;
 } );
 
