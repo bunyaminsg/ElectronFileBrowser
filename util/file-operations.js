@@ -74,9 +74,11 @@ function removeFile(pathToRemove) {
   });
 }
 
-async function newFile() {
-  return new Promise(success => {
-    $("#file-nav").find("tbody").append(`<tr id="nfn-wrapper"><td id="new-file-name" colspan="999" contentEditable="true"></td></tr>`);
+async function getFileNameInput(elem) {
+  return new Promise(resolve => {
+    const row = `<tr id="nfn-wrapper"><td id="new-file-name" colspan="999" contentEditable="true"></td></tr>`;
+    if (elem) $(row).insertAfter(elem);
+    else $("#file-nav").find("tbody").append(row);
     const $newFileName = $("#new-file-name");
     $newFileName.focus();
     $newFileName
@@ -86,7 +88,6 @@ async function newFile() {
       })
       .on("keyup", async (e) => {
         e.preventDefault();
-        console.log(e);
         switch (e.key.toLowerCase()) {
           case 'enter':
           case 'escape':
@@ -97,25 +98,119 @@ async function newFile() {
         }
         switch (e.key.toLowerCase()) {
           case 'enter':
-            const filePath = path.join(remote.getGlobal("current_dir"), $newFileName.html().replace(/^([^<]*).*$/, "$1"));
-            fs.writeFile(filePath, "", async (err) => {
-              if (err) {
-                showError(err);
-                success(false);
-              } else {
-                success(true);
-              }
-              $("#nfn-wrapper").remove();
-              $(`tr[path="${filePath}"]`).focus();
-            });
+            resolve($newFileName.html().replace(/^([^<]*).*$/, "$1"));
+            $("#nfn-wrapper").remove();
             break;
           case 'escape':
             $("#nfn-wrapper").remove();
-            success(false);
+            resolve(undefined);
             break;
           default:
         }
       });
+  });
+}
+
+async function newFile(elem) {
+  const name = await getFileNameInput(elem);
+  const filePath = path.join(remote.getGlobal("current_dir"), name);
+  return new Promise(success => {
+    fs.writeFile(filePath, "", async (err) => {
+      if (err) {
+        showError(err);
+        success(false);
+      } else {
+        success(true);
+        $(`tr[path="${filePath}"]`).focus();
+      }
+    });
+  });
+}
+
+async function newFolder(elem) {
+  const name = await getFileNameInput(elem);
+  const folderPath = path.join(remote.getGlobal("current_dir"), name);
+  return new Promise(success => {
+    fs.mkdir(folderPath, (err) => {
+      if (err) {
+        showError(err);
+        success(false);
+      } else {
+        success(true);
+        $(`tr[path="${folderPath}"]`).focus();
+      }
+    });
+  });
+}
+
+async function renameFile(elem) {
+  const $elem = $(elem);
+  const $fileNameCol = $($elem.find("td")[0]);
+  const $icon = $fileNameCol.find("i.icon");
+  const $iconClone = $icon.clone();
+  const oldPath = $elem.attr("path");
+  const filePath = $elem.attr("path").split(path.sep).slice(0,-1);
+  const fileName = $elem.attr("path").split(path.sep).slice(-1)[0];
+  $icon.remove();
+  $fileNameCol.attr("contentEditable", true);
+  $fileNameCol.focus();
+
+  return new Promise(resolve => {
+    const _rename = () => {
+      $fileNameCol.off("blur");
+      $fileNameCol.off("keyup");
+      $fileNameCol.removeAttr("contentEditable");
+      const newFileName = $fileNameCol.html()
+        .replace(/^([^<]*).*$/, "$1")
+        .replace('\n', '')
+        .trim();
+      const newPath = path.join(...filePath, newFileName);
+      $elem.attr("path", newPath);
+      $fileNameCol.html("");
+      $fileNameCol.append($iconClone);
+      $fileNameCol.append(newFileName);
+      $elem.css("pointer-events", "auto");
+      fs.rename(oldPath, newPath, (err) => {
+        if (err) {
+          showError(err);
+          _revert();
+        } else {
+          resolve(true);
+          remote.getGlobal("providers").favourites.favourites.forEach((fav) => {
+            if (fav.path === oldPath) {
+              remote.getGlobal("providers").favourites.remove(fav);
+              remote.getGlobal("providers").favourites.add(newFileName, newPath);
+            }
+          });
+        }
+      });
+    };
+    const _revert = () => {
+      $fileNameCol.removeAttr("contentEditable");
+      $fileNameCol.html("");
+      $fileNameCol.append($iconClone);
+      $fileNameCol.append(fileName);
+      $fileNameCol.off("blur");
+      $fileNameCol.off("keyup");
+      $elem.attr("path", oldPath);
+      $elem.css("pointer-events", "auto");
+      resolve(false);
+    };
+    $elem.css("pointer-events", "none");
+    $fileNameCol
+      .on("blur", () => $fileNameCol.focus())
+      .on("keyup", async (e) => {
+        e.preventDefault();
+        switch (e.key.toLowerCase()) {
+          case 'enter':
+            _rename();
+            break;
+          case 'escape':
+            _revert();
+            break;
+          default:
+        }
+      })
   });
 }
 
@@ -148,5 +243,7 @@ module.exports = {
   newFile: newFile,
   getDrives: getDrives,
   writeAppDataFile: writeAppDataFile,
-  readAppDataFile: readAppDataFile
+  readAppDataFile: readAppDataFile,
+  newFolder: newFolder,
+  renameFile: renameFile
 };

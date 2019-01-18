@@ -5,6 +5,8 @@ const newFile = require("../util/file-operations").newFile;
 const removeFile = require("../util/file-operations").removeFile;
 const ls = require("../components/navigator").ls;
 const $ = require("jquery");
+const renameFile = require("../util/file-operations").renameFile;
+const newFolder = require("../util/file-operations").newFolder;
 
 let isFileNavElement;
 let targetElement;
@@ -32,7 +34,7 @@ const newDocumentMenuItem = new MenuItem(
   {
     label: 'New Document',
     click: async (...args) => {
-      const success = await newFile();
+      const success = await newFile(targetElement);
       if (success) {
         ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
       }
@@ -40,11 +42,37 @@ const newDocumentMenuItem = new MenuItem(
   }
 );
 
+const newFolderMenuItem = new MenuItem(
+  {
+    label: 'New Folder',
+    click: async (...args) => {
+      const success = await newFolder(targetElement);
+      if (success) {
+        ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
+      }
+    }
+  }
+);
+
+const renameMenuItem = new MenuItem(
+  {
+    label: 'Rename',
+    click: async (...args) => {
+      const success = await renameFile(targetElement);
+      // if (success) {
+      //   ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
+      // }
+    }
+  }
+);
+
 const navigatorMenu = new Menu();
 const navigatorMenuItems = [
-  addToFavouritesMenuItem,
-  removeMenuItem,
+  newFolderMenuItem,
   newDocumentMenuItem,
+  addToFavouritesMenuItem,
+  renameMenuItem,
+  removeMenuItem,
   inspectMenuItem
 ];
 navigatorMenuItems.forEach(menuItem => navigatorMenu.append(menuItem));
