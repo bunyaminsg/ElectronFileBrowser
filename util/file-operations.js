@@ -4,21 +4,73 @@ const fs = require("fs");
 const showError = require("./common").showError;
 const promisify = require("./common").promisify;
 const { remote } = require('electron');
-const os = require("os")
+const os = require("os");
+const promptUser = require("./common").promptUser;
+const {getAppDataFolder} = require("./operating-system");
+
+function writeFile(file_path, data, sync) {
+  if (sync) {
+    try {
+      fs.writeFileSync(file_path, JSON.stringify(data), "utf-8");
+      return undefined;
+    } catch (err) {
+      return err;
+    }
+  } else {
+    return new Promise(resolve => fs.writeFile(file_path, JSON.stringify(data), "utf-8", (err) => {
+      resolve(err);
+    }));
+  }
+}
+
+function readFile(file_path, sync) {
+  if (sync) {
+    try {
+      const data = fs.readFileSync(file_path, "utf-8");
+      return [undefined, JSON.parse(data)];
+    } catch (err) {
+      return [err];
+    }
+  } else {
+    return new Promise(resolve => fs.readFile(file_path, "utf-8", (err, data) => {
+      resolve([err, JSON.parse(data)]);
+    }));
+  }
+}
+
+function writeAppDataFile(filename, data, sync) {
+  const appDataFolder = getAppDataFolder();
+  if (!fs.existsSync(appDataFolder)) {
+    fs.mkdirSync(appDataFolder);
+  }
+  return writeFile(path.join(appDataFolder, filename), data, sync);
+}
+
+function readAppDataFile(filename, sync) {
+  const appDataFolder = getAppDataFolder();
+  return readFile(path.join(appDataFolder, filename), sync);
+}
 
 function removeFile(pathToRemove) {
-  trash([pathToRemove]).then((trashPath) => {
-    // trashPath => [{ "path": <path_to_file_in_trash>, "info": <path_to_info_of_file_in_trash> }
-    // console.log(trashPath);
-    console.log(remote.getGlobal("providers"));
-    remote.getGlobal("providers").favourites.favourites.forEach((fav, i, arr) => {
-      if (fav.path === pathToRemove) {
-        arr.splice(i, 1);
-      }
-    });
-    $(`*[path="${pathToRemove}"]`).remove();
-  }, (err) => {
-    showError(err);
+  promptUser("Delete " + pathToRemove, "Are you sure?", ["No", "Yes"]).then((i) => {
+    if (parseInt("" + i, 10) === 1) {
+      trash([pathToRemove]).then((trashPath) => {
+        // trashPath => [{ "path": <path_to_file_in_trash>, "info": <path_to_info_of_file_in_trash> }
+        // console.log(trashPath);
+        remote.getGlobal("providers").favourites.favourites.forEach((fav) => {
+          if (fav.path === pathToRemove) {
+            remote.getGlobal("providers").favourites.remove(fav);
+          }
+        });
+        $(`[path]`).each(function () {
+          if ($(this).attr("path") === pathToRemove) {
+            $(this).remove();
+          }
+        });
+      }, (err) => {
+        showError(err);
+      });
+    }
   });
 }
 
@@ -94,5 +146,7 @@ async function getDrives() {
 module.exports = {
   removeFile: removeFile,
   newFile: newFile,
-  getDrives: getDrives
+  getDrives: getDrives,
+  writeAppDataFile: writeAppDataFile,
+  readAppDataFile: readAppDataFile
 };

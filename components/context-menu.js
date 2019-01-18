@@ -1,14 +1,13 @@
 const { remote } = require('electron');
 const { Menu, MenuItem } = remote;
 const path = require("path");
-let favourites;
 const newFile = require("../util/file-operations").newFile;
 const removeFile = require("../util/file-operations").removeFile;
 const ls = require("../components/navigator").ls;
 const $ = require("jquery");
 
 let isFileNavElement;
-let fileNavElement;
+let targetElement;
 let rightClickPosition;
 
 const inspectMenuItem = new MenuItem({
@@ -20,14 +19,14 @@ const inspectMenuItem = new MenuItem({
 
 const addToFavouritesMenuItem = new MenuItem(
   {
-    label: 'Add To favourites',
+    label: 'Add to Favourites',
     click: (...args) => {
-      favourites.add($(fileNavElement).attr("path").split(path.sep).slice(-1)[0], $(fileNavElement).attr("path"), remote.getGlobal("favourites").favourites);
+      remote.getGlobal("providers").favourites.add($(targetElement).attr("path").split(path.sep).slice(-1)[0], $(targetElement).attr("path"));
     }
   }
 );
 
-const removeMenuItem = new MenuItem({label: 'Remove', click: (...args) => { removeFile($(fileNavElement).attr("path")); }});
+const removeMenuItem = new MenuItem({label: 'Remove', click: (...args) => { removeFile($(targetElement).attr("path")); }});
 
 const newDocumentMenuItem = new MenuItem(
   {
@@ -41,22 +40,38 @@ const newDocumentMenuItem = new MenuItem(
   }
 );
 
-const menu = new Menu();
-const menuItems = [
+const navigatorMenu = new Menu();
+const navigatorMenuItems = [
   addToFavouritesMenuItem,
   removeMenuItem,
   newDocumentMenuItem,
   inspectMenuItem
 ];
-menuItems.forEach(menuItem => menu.append(menuItem));
+navigatorMenuItems.forEach(menuItem => navigatorMenu.append(menuItem));
+
+const removeFromFavouritesMenuItem = new MenuItem(
+  {
+    label: 'Remove from Favourites',
+    click: (...args) => {
+      const favourites = remote.getGlobal("providers").favourites;
+      favourites.remove(
+        favourites.favourites.filter(fav => `fav-${fav.id}` === $(targetElement).attr("id"))[0]
+      );
+    }
+  }
+);
+
+const favouritesMenu = new Menu();
+const favouritesMenuItems = [
+  removeFromFavouritesMenuItem
+];
+favouritesMenuItems.forEach(menuItem => favouritesMenu.append(menuItem));
 
 function init() {
-  favourites = remote.getGlobal("providers").favourites;
   window.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     rightClickPosition = {x: e.x, y: e.y};
-    isFileNavElement = false;
-    fileNavElement = undefined;
+    targetElement = undefined;
     let target = e.target;
     if ($(target).is("#file-nav *")) {
       while (target && !$(target).is("tr[path]")) {
@@ -64,11 +79,18 @@ function init() {
       }
       if (target) {
         isFileNavElement = true;
-        fileNavElement = target;
+        targetElement = target;
+        navigatorMenu.popup(remote.getCurrentWindow())
       }
-    }
-    if (isFileNavElement) {
-      menu.popup(remote.getCurrentWindow())
+    } else if ($(target).is("#favourites *")) {
+      while (target && !$(target).is('[id|=fav]')) {
+        target = target.parentElement;
+      }
+      if (target) {
+        isFileNavElement = true;
+        targetElement = target;
+        favouritesMenu.popup(remote.getCurrentWindow())
+      }
     }
   }, false);
 }

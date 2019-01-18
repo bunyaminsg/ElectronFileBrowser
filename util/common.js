@@ -43,3 +43,25 @@ exports.showError = function(err) {
         document.querySelector(".messages > .message:first-child").remove();
     }, 3000);
 }
+
+exports.promptUser = function(title, msg, options) {
+    return new Promise(resolve => {
+      const $modal = $("#prompt-modal");
+      $modal.find(".header").html(title);
+      $modal.find(".content").html(msg);
+      $modal.find(".extra").html((options || ['OK']).map((option, i) =>
+        `<button class="ui button" prompt-option="${i}">${option}</button>`
+      ).join(''));
+      $modal.modal("show");
+      $modal.modal("settings", "onHide", function () {
+        resolve(undefined);
+        $modal.find(".header").html("");
+        $modal.find(".content").html("");
+        $modal.find(".extra").html("");
+      });
+      $modal.find(".extra button").on("click", function() {
+          resolve($(this).attr("prompt-option"));
+          $modal.modal("hide");
+      });
+    });
+}

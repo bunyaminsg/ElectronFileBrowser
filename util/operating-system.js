@@ -1,3 +1,6 @@
+const os = require("os");
+const path = require("path");
+
 const OS = {
   LINUX: 1,
   WINDOWS: 2,
@@ -7,7 +10,7 @@ const OS = {
 
 exports.OS = OS;
 
-exports.getOS = () => {
+function getOS () {
   if (/^win/i.test(process.platform)) {
     return OS.WINDOWS;
   } else if (/^darwin/i.test(process.platform)) {
@@ -16,5 +19,19 @@ exports.getOS = () => {
     return OS.LINUX;
   } else {
     return OS.OTHER;
+  }
+}
+
+exports.getOS = getOS;
+
+exports.getAppDataFolder = () => {
+  switch (getOS()) {
+    case OS.WINDOWS:
+      return path.join(os.homedir(), "AppData", "Local", "ElectronSemanticFileBrowser");
+    case OS.MAC:
+      return path.join(os.homedir(), "Library", "Application Support", "ElectronSemanticFileBrowser");
+    case OS.LINUX:
+    case OS.OTHER:
+      return path.join(os.homedir(), ".config", "ElectronSemanticFileBrowser");
   }
 };

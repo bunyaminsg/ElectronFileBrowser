@@ -42,7 +42,7 @@ exports.init = function() {
     	const focused = document.querySelector("tr[path][tabIndex]:focus");
     	const startsWithKey = Array.from(document.querySelectorAll("tr[path][tabIndex]")).filter((elem) => trStartsWithKey(elem, e.key) );
     	if (!startsWithKey.length) return;
-    	console.log(focused, startsWithKey);
+    	// console.log(focused, startsWithKey);
     	if (focused && trStartsWithKey(focused, e.key) && (focused.getAttribute("tabIndex") !== startsWithKey[startsWithKey.length - 1].getAttribute("tabIndex"))) {
     	  i = startsWithKey.indexOf(focused) + 1;
     	}

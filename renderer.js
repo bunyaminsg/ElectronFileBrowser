@@ -45,9 +45,9 @@ if (/^linux/i.test(process.platform)) {
 
 async function main() {
   navigator.init();
+  favourites.init();
   contextMenu.init();
   search.init();
-  favourites.init();
   keyHandler.init();
   ls(os.homedir(), remote.getGlobal("hideHidden"));
 }
