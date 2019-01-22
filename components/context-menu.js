@@ -31,6 +31,7 @@ try {
   if (nodeModules.indexOf("@angular") > -1) npmCLIs.push(new MenuItem({label: "Angular", click: async () => ls_n_focus(...await createProject(targetElement, "angular"))}));
   if (nodeModules.indexOf("ionic") > -1) npmCLIs.push(new MenuItem({label: "Ionic", click: async () => ls_n_focus(...await createProject(targetElement, "ionic"))}));
 } catch (err) { console.log(err); }
+const projectMenuItem = new MenuItem({label: "Project", submenu: npmCLIs});
 
 const isNavigatorElement = (elem) => $(elem).is("#file-nav *");
 
@@ -39,7 +40,7 @@ const addToFavouritesMenuItem = new MenuItem({label: 'Add to Favourites', click:
 const removeMenuItem = new MenuItem({label: 'Delete', click: (...args) => removeFile($(targetElement).attr("path"))});
 const newDocumentMenuItem = new MenuItem({label: 'Document', click: async (...args) => ls_n_focus(...await newFile(targetElement))});
 const newFolderMenuItem = new MenuItem({label: 'Folder', click: async (...args) => ls_n_focus(...await newFolder(targetElement))});
-const newMenuItem = new MenuItem({label: 'New', submenu: [newDocumentMenuItem, newFolderMenuItem].concat(npmCLIs)})
+const newMenuItem = new MenuItem({label: 'New', submenu: [newDocumentMenuItem, newFolderMenuItem].concat(npmCLIs.length ? [projectMenuItem] : [])})
 const renameMenuItem = new MenuItem({label: 'Rename', click: async (...args) => ls_n_focus(...await renameFile(targetElement))});
 const navigatorMenuItems = [
   newMenuItem,
