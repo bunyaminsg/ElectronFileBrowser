@@ -65,3 +65,24 @@ exports.promptUser = function(title, msg, options) {
       });
     });
 }
+
+const fileTypes = require("../fileTypes");
+const path = require("path");
+
+function getType(p) {
+  return (fileTypes[path.extname(p).substring(1)] || '').split("\/")[0];
+}
+
+function getFileIcon(p) {
+  return 'file ' + (getType(p) || '') + ' outline';
+}
+
+exports.createRow = function(fileName, filePath, isFolder, fileSize, lastModified) {
+  return `<tr folder="${isFolder}" path="${filePath}">
+        <td>
+        <i class="${isFolder ? 'folder' : getFileIcon(filePath)} icon"></i> ${fileName}
+        </td>
+        <td class="collapsing">${isFolder ? '' : fileSize}</td>
+        <td class="right aligned">${lastModified}</td>
+    </tr>`;
+}

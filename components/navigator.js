@@ -2,9 +2,9 @@ const $ = require("jquery");
 const path = require("path");
 const execSync = require("child_process").execSync;
 const {promisify, showError, fileSizeToString, escapePath} = require("../util/common");
-const fileTypes = require("../fileTypes");
 const fs = require("fs");
 const breadcrumb = require("./breadcrumb");
+const createRow = require("../util/common").createRow;
 const getDrives = require("../util/file-operations").getDrives;
 const { ipcRenderer, remote } = require( "electron" );
 const { OS, getOS } = require("../util/operating-system");
@@ -14,14 +14,6 @@ function hideSearch() {
   $("#navigate-wrapper").css("display", "none");
   $(".breadcrumb").css("display", "");
   $("#search-wrapper").css("display", "none");
-}
-
-function getType(p) {
-  return (fileTypes[path.extname(p).substring(1)] || '').split("\/")[0];
-}
-
-function getFileIcon(p) {
-  return 'file ' + (getType(p) || '') + ' outline';
 }
 
 function hideNavigator() {
@@ -121,16 +113,6 @@ function init() {
         break;
     }
   });
-}
-
-function createRow(fileName, filePath, isFolder, fileSize, lastModified) {
-    return `<tr folder="${isFolder}" path="${filePath}">
-        <td>
-        <i class="${isFolder ? 'folder' : getFileIcon(filePath)} icon"></i> ${fileName}
-        </td>
-        <td class="collapsing">${isFolder ? '' : fileSize}</td>
-        <td class="right aligned">${lastModified}</td>
-    </tr>`;
 }
 
 module.exports = {
