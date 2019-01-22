@@ -7,6 +7,7 @@ const { remote } = require('electron');
 const os = require("os");
 const promptUser = require("./common").promptUser;
 const {getAppDataFolder} = require("./operating-system");
+const {runVisual} = require('./bash');
 
 function writeFile(file_path, data, sync) {
   if (sync) {
@@ -113,6 +114,7 @@ async function getFileNameInput(elem) {
 
 async function newFile(elem) {
   const name = await getFileNameInput(elem);
+  if (!name) return [false];
   const filePath = path.join(remote.getGlobal("current_dir"), name);
   return new Promise(resolve => {
     fs.writeFile(filePath, "", async (err) => {
@@ -128,6 +130,7 @@ async function newFile(elem) {
 
 async function newFolder(elem) {
   const name = await getFileNameInput(elem);
+  if (!name) return [false];
   const folderPath = path.join(remote.getGlobal("current_dir"), name);
   return new Promise(resolve => {
     fs.mkdir(folderPath, (err) => {
@@ -139,6 +142,26 @@ async function newFolder(elem) {
       }
     });
   });
+}
+
+const cli = {
+  angular: "ng new $name",
+  ionic: "ionic start $name blank"
+}
+
+async function createProject(elem, type) {
+  const name = await getFileNameInput(elem);
+  if (!name) return [false];
+  if (!cli[type]) { showError(type + " CLI not found."); return [false]; };
+  try {
+    const command = cli[type].split(" ")[0];
+    const args = cli[type].replace("\$name", name).split(" ").slice(1);
+    const exitCode = await runVisual(command, args);
+    return [true, path.join(__dirname, name)];
+  } catch (err) {
+    console.log(err);
+    return [false];
+  }
 }
 
 async function renameFile(elem) {
@@ -243,5 +266,6 @@ module.exports = {
   writeAppDataFile: writeAppDataFile,
   readAppDataFile: readAppDataFile,
   newFolder: newFolder,
-  renameFile: renameFile
+  renameFile: renameFile,
+  createProject: createProject
 };
