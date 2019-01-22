@@ -145,22 +145,50 @@ async function newFolder(elem) {
 }
 
 const cli = {
-  angular: "ng new $name",
-  ionic: "ionic start $name blank"
+  angular: ["ng new $name"],
+  ionic: ["ionic start $name blank"],
+  cpp: async function(name) {
+    if (!name || (name === '.cpp')) return [false];
+    if (/\.cpp$/.test(name)) name = name.replace(/\.cpp$/, "");
+    const [mk_err] = await promisify(fs.mkdir, [path.join(remote.getGlobal("current_dir"), name)]);
+    if (mk_err) {
+      showError(mk_err);
+      return [false];
+    }
+    const [wc_err] = await promisify(fs.writeFile, [
+      path.join(remote.getGlobal("current_dir"), name, name + '.cpp'),
+      `#include<iostream>\n#include "${name}.h"\nusing namespace std;\n\nint main(){\n    return 0;\n}`,
+      "utf-8"
+    ]);
+    if (wc_err) showError(wc_err);
+    const [wh_err] = await promisify(fs.writeFile, [
+      path.join(remote.getGlobal("current_dir"), name, name + '.h'),
+      `#ifndef ${name.replace(/\./g, "_").toUpperCase()}_H\n#define ${name.replace(/\./g, "_").toUpperCase()}_H\n\n#endif`,
+      "utf-8"
+    ]);
+    if (wh_err) showError(wh_err);
+    return [true, path.join(remote.getGlobal("current_dir", name))]
+  }
 }
 
 async function createProject(elem, type) {
   const name = await getFileNameInput(elem);
   if (!name) return [false];
   if (!cli[type]) { showError(type + " CLI not found."); return [false]; };
-  try {
-    const command = cli[type].split(" ")[0];
-    const args = cli[type].replace("\$name", name).split(" ").slice(1);
-    const exitCode = await runVisual(command, args);
-    return [true, path.join(__dirname, name)];
-  } catch (err) {
-    console.log(err);
-    return [false];
+  if (Array.isArray(cli[type])) {
+    try {
+      cli[type].forEach(async (cmd, index, all) => {
+        const command = cmd.split(" ")[0];
+        const args = cmd.replace(/\$name/g, name).split(" ").slice(1);
+        await runVisual(command, args, index, all.length - 1);
+      });
+      return [true, path.join(__dirname, name)];
+    } catch (err) {
+      showError(err);
+      return [false];
+    }
+  } else if (typeof cli[type] === 'function') {
+    return await cli[type](name);
   }
 }
 

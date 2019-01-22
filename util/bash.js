@@ -20,13 +20,17 @@ function runCommand (command, args, onData, onError, onExit) {
 
 exports.runCommand = runCommand;
 
-exports.runVisual = async function (command, args) {
+exports.runVisual = async function (command, args, index, last) {
   return new Promise(resolve => {
-    $("body").append(`<div id="bash-modal" class="ui modal"><div class="scrolling content"><pre style="white-space: pre-wrap"></pre></content></div>`);
+    if (!index) {
+      $("body").append(`<div id="bash-modal" class="ui modal"><div class="scrolling content"><pre style="white-space: pre-wrap"></pre></content></div>`);
+    }
     const $outputModal = $("#bash-modal");
     const $outputPanel = $outputModal.find(".content > pre");
-    $outputModal.modal({closable: false});
-    $outputModal.modal('show');
+    if (!index) {
+      $outputModal.modal({closable: false});
+      $outputModal.modal('show');
+    }
     $outputPanel.append(`<b>${command} ${args.join(" ")}</b><br>`);
     runCommand(command, args, (data) => {
       $outputPanel.append(`${data}<br>`);
@@ -35,11 +39,13 @@ exports.runVisual = async function (command, args) {
     }, (exitCode) => {
       $outputPanel.append(`Exited with code: ${exitCode}<br>`);
       resolve(exitCode);
-      $outputModal.append(`<div class="actions"><button id="close-bash-modal" class="ui primary button">OK</button></div>`);
-      $("#close-bash-modal").on("click", () => {
-        $outputModal.modal("hide");
-        $outputModal.remove();
-      });
+      if (index === last) {
+        $outputModal.append(`<div class="actions"><button id="close-bash-modal" class="ui primary button">OK</button></div>`);
+        $("#close-bash-modal").on("click", () => {
+          $outputModal.modal("hide");
+          $outputModal.remove();
+        });
+      }
     });
   });
 }
