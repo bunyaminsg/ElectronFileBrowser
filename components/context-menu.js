@@ -12,72 +12,37 @@ let isFileNavElement;
 let targetElement;
 let rightClickPosition;
 
-const inspectMenuItem = new MenuItem({
-  label: 'Inspect Element',
-  click: () => {
-    remote.getCurrentWindow().inspectElement(rightClickPosition.x, rightClickPosition.y)
+async function ls_n_focus(success, newPath) {
+  if (success) {
+    await ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
+    $("#file-nav").find(`tr[path="${newPath}"]`).focus();
   }
-});
+}
 
-const addToFavouritesMenuItem = new MenuItem(
-  {
-    label: 'Add to Favourites',
-    click: (...args) => {
-      remote.getGlobal("providers").favourites.add($(targetElement).attr("path").split(path.sep).slice(-1)[0], $(targetElement).attr("path"));
-    }
-  }
-);
+/** Navigator Menu **/
 
-const removeMenuItem = new MenuItem({label: 'Delete', click: (...args) => { removeFile($(targetElement).attr("path")); }});
+const isNavigatorElement = (elem) => $(elem).is("#file-nav *");
 
-const newDocumentMenuItem = new MenuItem(
-  {
-    label: 'New Document',
-    click: async (...args) => {
-      const [success, newPath] = await newFile(targetElement);
-      if (success) {
-        await ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
-        $("#file-nav").find(`tr[path="${newPath}"]`).focus();
-      }
-    }
-  }
-);
-
-const newFolderMenuItem = new MenuItem(
-  {
-    label: 'New Folder',
-    click: async (...args) => {
-      const [success, newPath] = await newFolder(targetElement);
-      if (success) {
-        await ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
-        $("#file-nav").find(`tr[path="${newPath}"]`).focus();
-      }
-    }
-  }
-);
-
-const renameMenuItem = new MenuItem(
-  {
-    label: 'Rename',
-    click: async (...args) => {
-      const success = await renameFile(targetElement);
-      // if (success) {
-      //   ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
-      // }
-    }
-  }
-);
-
-const navigatorMenu = new Menu();
+const inspectMenuItem = new MenuItem({label: 'Inspect Element', click: () => remote.getCurrentWindow().inspectElement(rightClickPosition.x, rightClickPosition.y)});
+const addToFavouritesMenuItem = new MenuItem({label: 'Add to Favourites', click: (...args) => remote.getGlobal("providers").favourites.add($(targetElement).attr("path").split(path.sep).slice(-1)[0], $(targetElement).attr("path"))});
+const removeMenuItem = new MenuItem({label: 'Delete', click: (...args) => removeFile($(targetElement).attr("path"))});
+const newDocumentMenuItem = new MenuItem({label: 'Document', click: async (...args) => ls_n_focus(...await newFile(targetElement))});
+const newFolderMenuItem = new MenuItem({label: 'Folder', click: async (...args) => ls_n_focus(...await newFolder(targetElement))});
+const newMenuItem = new MenuItem({label: 'New', submenu: [newDocumentMenuItem, newFolderMenuItem]})
+const renameMenuItem = new MenuItem({label: 'Rename', click: async (...args) => ls_n_focus(...await renameFile(targetElement))});
 const navigatorMenuItems = [
-  newFolderMenuItem,
-  newDocumentMenuItem,
-  addToFavouritesMenuItem,
+  newMenuItem,
   renameMenuItem,
   removeMenuItem,
+  addToFavouritesMenuItem,
   inspectMenuItem
 ];
+const navigatorMenu = new Menu();
 navigatorMenuItems.forEach(menuItem => navigatorMenu.append(menuItem));
+
+/** Favourites Menu **/
+
+const isFavouritesElement = (elem) => $(elem).is("#favourites *");
 
 const removeFromFavouritesMenuItem = new MenuItem(
   {
@@ -103,25 +68,13 @@ function init() {
     rightClickPosition = {x: e.x, y: e.y};
     targetElement = undefined;
     let target = e.target;
-    if ($(target).is("#file-nav *")) {
-      while (target && !$(target).is("tr[path]")) {
-        target = target.parentElement;
-      }
-      if (target) {
-        isFileNavElement = true;
-        targetElement = target;
-        navigatorMenu.popup(remote.getCurrentWindow())
-      }
-    } else if ($(target).is("#favourites *")) {
-      while (target && !$(target).is('[id|=fav]')) {
-        target = target.parentElement;
-      }
-      if (target) {
-        isFileNavElement = true;
-        targetElement = target;
-        favouritesMenu.popup(remote.getCurrentWindow())
-      }
-    }
+    let targetSelector;
+    let targetMenu;
+    if (isNavigatorElement(target)) { targetSelector = "tr[path]"; targetMenu = navigatorMenu; }
+    else if (isFavouritesElement(target)) { targetSelector = "[id|=fav]"; targetMenu = favouritesMenu; }
+    else return;
+    while (target && !$(target).is(targetSelector)) target = target.parentElement;
+    if (target) { targetElement = target; targetMenu.popup(remote.getCurrentWindow()); }
   }, false);
 }
 

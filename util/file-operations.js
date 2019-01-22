@@ -173,7 +173,7 @@ async function renameFile(elem) {
           showError(err);
           _revert();
         } else {
-          resolve(true);
+          resolve([true, newPath]);
           remote.getGlobal("providers").favourites.favourites.forEach((fav) => {
             if (fav.path === oldPath) {
               remote.getGlobal("providers").favourites.remove(fav);
@@ -192,7 +192,7 @@ async function renameFile(elem) {
       $fileNameCol.off("keyup");
       $elem.attr("path", oldPath);
       $elem.css("pointer-events", "auto");
-      resolve(false);
+      resolve([false]);
     };
     $elem.css("pointer-events", "none");
     $fileNameCol
