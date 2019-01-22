@@ -1,13 +1,16 @@
 {
-  "name": "unbecoming-transport-peep",
-  "productName": "unbecoming-transport-peep",
-  "description": "My Electron application description",
+  "name": "electron-file-browser",
+  "productName": "ElectronFileBrowser",
+  "description": "Electron File Browser",
   "keywords": [],
   "main": "./main.js",
   "version": "1.0.0",
   "author": "bunyamin",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icon.icns --prune=true --out=../electron-file-browser-builds",
+    "package-win": "electron-packager . ElectronFileBrowser --overwrite --asar=true --platform=win32 --arch=ia32 --icon=assets/icon.ico --prune=true --out=../electron-file-browser-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Electron File Browser\"",
+    "package-linux": "electron-packager . ElectronFileBrowser --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icon.png --prune=true --out=../electron-file-browser-builds"
   },
   "dependencies": {
     "jquery": "^3.3.1",
@@ -17,6 +20,7 @@
     "uuid": "3.3.2"
   },
   "devDependencies": {
-    "electron": "^2.0.16"
+    "electron": "^2.0.16",
+    "electron-packager": "^13.0.1"
   }
 }
