@@ -33,10 +33,11 @@ function search (p, key, completed) {
           fs.stat(path.join(p, file), (err, stats) => {
             if (!err && stats.isDirectory() && !/.*\.asar$/.test(file)) {
               const scomplete = new Subject();
+              const obs = search(path.join(p, file), key, scomplete);
               subscriptions.push({
 //                path: path.join(p, file),
                 completed: scomplete,
-                subscription: search(path.join(p, file), key, scomplete).subscribe(x => found.next(x))
+                subscription: obs && obs.subscribe(x => found.next(x))
               });
             }
             _async--;
@@ -47,7 +48,7 @@ function search (p, key, completed) {
     })().then(() => {
       if (!subscriptions.length) { completed.next(1); }
       else {
-        subscriptions.forEach((subs, i, _subscriptions) => {
+        subscriptions.filter(sub => sub.subscription).forEach((subs, i, _subscriptions) => {
           take(1)(subs.completed.asObservable()).subscribe(() => {
             subs.subscription.unsubscribe();
             _subscriptions.splice(_subscriptions.indexOf(subs), 1);
@@ -59,7 +60,7 @@ function search (p, key, completed) {
   });
   const completeSubs = completed.asObservable().subscribe((id) => {
     if (id !== 1) {
-      subscriptions.forEach((subs) => {
+      subscriptions.filter(sub => sub.subscription).forEach((subs) => {
         subs.subscription.unsubscribe();
         subs.completed.next(0);
       });
