@@ -114,14 +114,13 @@ async function getFileNameInput(elem) {
 async function newFile(elem) {
   const name = await getFileNameInput(elem);
   const filePath = path.join(remote.getGlobal("current_dir"), name);
-  return new Promise(success => {
+  return new Promise(resolve => {
     fs.writeFile(filePath, "", async (err) => {
       if (err) {
         showError(err);
-        success(false);
+        resolve([false, filePath]);
       } else {
-        success(true);
-        $(`tr[path="${filePath}"]`).focus();
+        resolve([true, filePath]);
       }
     });
   });
@@ -130,14 +129,13 @@ async function newFile(elem) {
 async function newFolder(elem) {
   const name = await getFileNameInput(elem);
   const folderPath = path.join(remote.getGlobal("current_dir"), name);
-  return new Promise(success => {
+  return new Promise(resolve => {
     fs.mkdir(folderPath, (err) => {
       if (err) {
         showError(err);
-        success(false);
+        resolve([false, folderPath]);
       } else {
-        success(true);
-        $(`tr[path="${folderPath}"]`).focus();
+        resolve([true, folderPath]);
       }
     });
   });

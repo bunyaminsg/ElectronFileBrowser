@@ -28,15 +28,16 @@ const addToFavouritesMenuItem = new MenuItem(
   }
 );
 
-const removeMenuItem = new MenuItem({label: 'Remove', click: (...args) => { removeFile($(targetElement).attr("path")); }});
+const removeMenuItem = new MenuItem({label: 'Delete', click: (...args) => { removeFile($(targetElement).attr("path")); }});
 
 const newDocumentMenuItem = new MenuItem(
   {
     label: 'New Document',
     click: async (...args) => {
-      const success = await newFile(targetElement);
+      const [success, newPath] = await newFile(targetElement);
       if (success) {
-        ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
+        await ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
+        $("#file-nav").find(`tr[path="${newPath}"]`).focus();
       }
     }
   }
@@ -46,9 +47,10 @@ const newFolderMenuItem = new MenuItem(
   {
     label: 'New Folder',
     click: async (...args) => {
-      const success = await newFolder(targetElement);
+      const [success, newPath] = await newFolder(targetElement);
       if (success) {
-        ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
+        await ls(remote.getGlobal("current_dir"), remote.getGlobal("hideHidden"));
+        $("#file-nav").find(`tr[path="${newPath}"]`).focus();
       }
     }
   }
