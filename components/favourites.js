@@ -7,19 +7,7 @@ const uuid = require("uuid");
 const showError = require("../util/common").showError;
 const {readAppDataFile, writeAppDataFile} = require("../util/file-operations");
 
-const [err, savedFavourites] = readAppDataFile("favourites.json", true);
-let _favourites = err ? [
-  {id: "root", name: "Root", path: remote.getGlobal("root_dir"), icon: "hdd outline"},
-  {id: "home", name: "Home", path: os.homedir(), icon: "home"},
-  {id: "desktop", name: "Desktop", path: path.join(os.homedir(), "Desktop"), icon: "desktop"},
-  {id: "downloads", name: "Downloads", path: path.join(os.homedir(), "Downloads"), icon: "download"}
-] : savedFavourites;
-
-if (err) {
-  writeAppDataFile("favourites.json", _favourites).then((_err) => {
-    if (_err) showError(_err);
-  });
-}
+const _favourites = [];
 
 function add(name, path) {
   const fav = {
@@ -46,6 +34,31 @@ function remove(fav) {
 }
 
 function init() {
+  let initialFavourites;
+  const defaultFavourites = [
+    {id: "root", name: "Root", path: remote.getGlobal("root_dir"), icon: "hdd outline"},
+    {id: "home", name: "Home", path: os.homedir(), icon: "home"},
+    {id: "desktop", name: "Desktop", path: path.join(os.homedir(), "Desktop"), icon: "desktop"},
+    {id: "downloads", name: "Downloads", path: path.join(os.homedir(), "Downloads"), icon: "download"}
+  ];
+  const [err, savedFavourites] = readAppDataFile("favourites.json", true);
+  initialFavourites = err ? defaultFavourites : savedFavourites;
+
+  if (err) {
+    writeAppDataFile("favourites.json", initialFavourites).then((_err) => {
+      if (_err) showError(_err);
+    });
+  } else if (initialFavourites.filter(fav => !fav.path).length) {
+    initialFavourites = defaultFavourites;
+    writeAppDataFile("favourites.json", defaultFavourites).then((_err) => {
+      if (_err) showError(_err);
+    });
+  }
+
+  _favourites.push(...initialFavourites);
+
+  console.log(_favourites);
+
   $("#favourites").find(".menu").html(_favourites.map(fav => `<a class="item" id="fav-${fav.id}"><i class="${fav.icon} icon"></i>${fav.name}</a>`));
   _favourites.forEach(fav => $(`#fav-${fav.id}`).on("click", () => { ls(fav.path, remote.getGlobal("hideHidden")); }));
 }

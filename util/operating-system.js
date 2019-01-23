@@ -27,11 +27,11 @@ exports.getOS = getOS;
 exports.getAppDataFolder = () => {
   switch (getOS()) {
     case OS.WINDOWS:
-      return path.join(os.homedir(), "AppData", "Local", "ElectronSemanticFileBrowser");
+      return path.join(os.homedir(), "AppData", "Local", "ElectronFileBrowser");
     case OS.MAC:
-      return path.join(os.homedir(), "Library", "Application Support", "ElectronSemanticFileBrowser");
+      return path.join(os.homedir(), "Library", "Application Support", "ElectronFileBrowser");
     case OS.LINUX:
     case OS.OTHER:
-      return path.join(os.homedir(), ".config", "ElectronSemanticFileBrowser");
+      return path.join(os.homedir(), ".config", "ElectronFileBrowser");
   }
 };

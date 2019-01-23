@@ -37,6 +37,7 @@ function selectFile(elem) {
 }
 
 async function ls(dir, hide) {
+  console.log(dir);
   const drives = await getDrives();
   $("#favourites").find(".menu a[id|=drive]").remove();
   drives.forEach((drive, ind) => {
