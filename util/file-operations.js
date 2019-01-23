@@ -78,7 +78,7 @@ function removeFile(pathToRemove) {
 async function getFileNameInput(elem) {
   return new Promise(resolve => {
     const row = `<tr id="nfn-wrapper"><td id="new-file-name" colspan="999" contentEditable="true"></td></tr>`;
-    if (elem) $(row).insertAfter(elem);
+    if (elem && $(elem).is("tr")) $(row).insertAfter(elem);
     else $("#file-nav").find("tbody").append(row);
     const $newFileName = $("#new-file-name");
     $newFileName.focus();

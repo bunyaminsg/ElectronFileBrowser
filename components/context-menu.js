@@ -54,6 +54,16 @@ const navigatorMenuItems = [
 const navigatorMenu = new Menu();
 navigatorMenuItems.forEach(menuItem => navigatorMenu.append(menuItem));
 
+/** Folder Navigator Menu **/
+const isFolderElement = (elem) => $(elem).is("#file-nav-wrapper");
+const folderMenuItems = [
+  newMenuItem,
+  addToFavouritesMenuItem,
+  inspectMenuItem
+];
+const folderMenu = new Menu();
+folderMenuItems.forEach(menuItem => folderMenu.append(menuItem));
+
 /** Favourites Menu **/
 
 const isFavouritesElement = (elem) => $(elem).is("#favourites *");
@@ -86,6 +96,7 @@ function init() {
     let targetMenu;
     if (isNavigatorElement(target)) { targetSelector = "tr[path]"; targetMenu = navigatorMenu; }
     else if (isFavouritesElement(target)) { targetSelector = "[id|=fav]"; targetMenu = favouritesMenu; }
+    else if (isFolderElement(target)) { targetSelector = "#file-nav-wrapper"; targetMenu = folderMenu; }
     else return;
     while (target && !$(target).is(targetSelector)) target = target.parentElement;
     if (target) { targetElement = target; targetMenu.popup(remote.getCurrentWindow()); }
