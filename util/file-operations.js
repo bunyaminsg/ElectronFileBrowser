@@ -163,9 +163,9 @@ function closeBashModal() {
   }
 }
 
-function creatorFromTemplate(type, fileManipulator) {
+function creatorFromTemplate(type, fileManipulator, onComplete) {
   if (!fileManipulator) fileManipulator = _ => _;
-  return (name) => {
+  return async (name) => {
     if (!name) { return [false]; }
     openBashModal();
     const $outputModal = $("#bash-modal");
@@ -182,6 +182,9 @@ function creatorFromTemplate(type, fileManipulator) {
           fs.writeFileSync(path.join(outPath, f[0]), f[1], "utf-8");
           $outputPanel.append(`<b style="color: green">Created: ${path.join(outPath, f[0])}</b><br>`);
         });
+      if (onComplete) {
+        await onComplete(name, outPath);
+      }
       closeBashModal();
       return [true, outPath];
     } catch (err) {
@@ -206,6 +209,9 @@ const cli = {
       fileName.replace(/\$name/g, name),
       fileContent.replace(/\$nameLowerCase/g, name.toLowerCase()).replace(/\$name/g, name)
     ];
+  }, async (name, outputPath) => {
+    await runVisual("npm", ["install", "--prefix", outputPath], 1, 2);
+    return;
   })
 }
 
