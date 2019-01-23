@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <title>File Browser</title>
-        <link rel="stylesheet" href="./semantic/semantic.min.css"/>
+    <link rel="stylesheet" href="./semantic/semantic.min.css"/>
     <!--script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.11.8/semantic.min.js"></script-->
     <style>
@@ -50,7 +50,14 @@
       <div class="ui input" style="width: 43%; display: none" id="search-wrapper">
         <input id="search">
       </div>
-      <button class="ui right floated basic button" id="toggle_hidden">Show/Hide Hidden Files</button>
+      <div class="ui right floated dropdown basic icon button" id="actions">
+        <i class="cogs icon"></i>
+        <div class="menu">
+          <a class="item" id="toggle_hidden">Show/Hide Hidden Files</a>
+          <a class="item" id="run_term"><i class="terminal icon"></i> Open in Terminal</a>
+          <a class="item" id="run_cmd"><i class="play icon"></i> Run Command</a>
+        </div>
+      </div>
       <button class="ui right floated basic icon button" id="search-button"><i class="search icon"></i></button>
     </div>
     <div class="ui grid no-pad" style="width: 100vw; overflow: hidden; margin-right: 0; margin-left: 0;">
@@ -76,8 +83,8 @@
     </div>
     <!-- Insert this line above script imports  -->
     <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/1.11.8/semantic.min.js"></script>
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="semantic/semantic.min.js"></script>
     <script>$(".dropdown").dropdown()</script>
     <!-- Insert this line after script imports -->
     <script>if (window.module) module = window.module;</script>
