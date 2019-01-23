@@ -13,7 +13,7 @@ const navigator = require("./components/navigator");
 const favourites = require("./components/favourites");
 const ls = require("./components/navigator").ls;
 const keyHandler = require('./util/key-handler');
-
+const {runVisual} = require("./util/bash");
 // console.log(favourites);
 
 const { ipcRenderer } = require( "electron" );
@@ -44,12 +44,26 @@ if (/^linux/i.test(process.platform)) {
 }
 
 async function main() {
+  initDOM();
   navigator.init();
   favourites.init();
   contextMenu.init();
   search.init();
   keyHandler.init();
   ls(os.homedir(), remote.getGlobal("hideHidden"));
+}
+
+async function prompt(msg) {
+  $("#prompt-dimmer").dimmer("show");
+}
+
+function initDOM() {
+  $("#run_cmd").on("click", async () => {
+    const cmds = prompt("Command:").split("&&").map(_ =>  _.trim());
+    for (let i = 0; i < cmds.length; i++) {
+      await runVisual(cmd.split(" ")[0], cmd.split(" ").slice(1), i, cmds.length);
+    }
+  });
 }
 
 document.getElementById("back").onclick = function() {
