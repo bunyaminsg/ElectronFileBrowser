@@ -32,6 +32,7 @@ try {
   if (nodeModules.indexOf("ionic") > -1) projectTemplates.push(new MenuItem({label: "Ionic", click: async () => ls_n_focus(...await createProject(targetElement, "ionic"))}));
 } catch (err) { console.log(err); }
 projectTemplates.push(new MenuItem({label: "C++", click: async () => ls_n_focus(...await createProject(targetElement, "cpp"))}));
+projectTemplates.push(new MenuItem({label: "Electron", click: async () => ls_n_focus(...await createProject(targetElement, "electron"))}));
 const projectMenuItem = new MenuItem({label: "Project", submenu: projectTemplates});
 
 const isNavigatorElement = (elem) => $(elem).is("#file-nav *");

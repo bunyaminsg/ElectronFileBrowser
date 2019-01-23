@@ -144,31 +144,69 @@ async function newFolder(elem) {
   });
 }
 
+function openBashModal() {
+  closeBashModal();
+  $("body").append(`<div id="bash-modal" class="ui modal"><div class="scrolling content"><pre style="white-space: pre-wrap"></pre></content></div>`);
+  const $outputModal = $("#bash-modal");
+  $outputModal.modal({closable: false});
+  $outputModal.modal('show');
+}
+
+function closeBashModal() {
+  const $outputModal = $("#bash-modal");
+  if ($outputModal.length) {
+    $outputModal.append(`<div class="actions"><button id="close-bash-modal" class="ui primary button">OK</button></div>`);
+    $("#close-bash-modal").on("click", () => {
+      $outputModal.modal("hide");
+      $outputModal.remove();
+    });
+  }
+}
+
+function creatorFromTemplate(type, fileManipulator) {
+  if (!fileManipulator) fileManipulator = _ => _;
+  return (name) => {
+    if (!name) { return [false]; }
+    openBashModal();
+    const $outputModal = $("#bash-modal");
+    const $outputPanel = $outputModal.find(".content > pre");
+    $outputPanel.append(`<b>Creating project: ${name}</b><br>`);
+    try {
+      const templatePath = path.join(__dirname, "..", "templates", type);
+      const outPath = path.join(remote.getGlobal("current_dir"), name);
+      fs.mkdirSync(outPath);
+      $outputPanel.append(`<b style="color: green">Created: ${outPath}</b><br>`);
+      const files = fs.readdirSync(templatePath)
+        .map(filePath => fileManipulator(filePath, fs.readFileSync(path.join(templatePath, filePath), "utf-8"))(name))
+        .forEach(f => {
+          fs.writeFileSync(path.join(outPath, f[0]), f[1], "utf-8");
+          $outputPanel.append(`<b style="color: green">Created: ${path.join(outPath, f[0])}</b><br>`);
+        });
+      closeBashModal();
+      return [true, outPath];
+    } catch (err) {
+      $outputPanel.append(`<b style="color: red">Created: ${err}</b><br>`);
+      closeBashModal();
+      return [false];
+    }
+  };
+}
+
 const cli = {
   angular: ["ng new $name"],
   ionic: ["ionic start $name blank"],
-  cpp: async function(name) {
-    if (!name || (name === '.cpp')) return [false];
-    if (/\.cpp$/.test(name)) name = name.replace(/\.cpp$/, "");
-    const [mk_err] = await promisify(fs.mkdir, [path.join(remote.getGlobal("current_dir"), name)]);
-    if (mk_err) {
-      showError(mk_err);
-      return [false];
-    }
-    const [wc_err] = await promisify(fs.writeFile, [
-      path.join(remote.getGlobal("current_dir"), name, name + '.cpp'),
-      `#include<iostream>\n#include "${name}.h"\nusing namespace std;\n\nint main(){\n    return 0;\n}`,
-      "utf-8"
-    ]);
-    if (wc_err) showError(wc_err);
-    const [wh_err] = await promisify(fs.writeFile, [
-      path.join(remote.getGlobal("current_dir"), name, name + '.h'),
-      `#ifndef ${name.replace(/\./g, "_").toUpperCase()}_H\n#define ${name.replace(/\./g, "_").toUpperCase()}_H\n\n#endif`,
-      "utf-8"
-    ]);
-    if (wh_err) showError(wh_err);
-    return [true, path.join(remote.getGlobal("current_dir", name))]
-  }
+  cpp: creatorFromTemplate("cpp", (fileName, fileContent) => {
+    return (name) => [
+      fileName.replace(/\$name/g, name),
+      fileContent.replace(/\$name/g, fileName.endsWith("cpp") ? name : name.replace(/\./g, "_").toUpperCase())
+    ];
+  }),
+  electron: creatorFromTemplate("electron", (fileName, fileContent) => {
+    return (name) => [
+      fileName.replace(/\$name/g, name),
+      fileContent.replace(/\$nameLowerCase/g, name.toLowerCase()).replace(/\$name/g, name)
+    ];
+  })
 }
 
 async function createProject(elem, type) {
