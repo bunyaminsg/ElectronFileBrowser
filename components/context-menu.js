@@ -86,7 +86,54 @@ const favouritesMenuItems = [
 ];
 favouritesMenuItems.forEach(menuItem => favouritesMenu.append(menuItem));
 
+/** Top Menu **/
+
+const topMenu = new Menu();
+const themeMenuItems = [
+  new MenuItem({
+    id: "default",
+    label: "Default",
+    type: "radio",
+    checked: true,
+    click: () => {
+      $(".button,.segment,.table,.menu").removeClass("inverted");
+      $(".breadcrumb .divider").css("color", "");
+      $("body").css("background", "");
+    }
+  }),
+  new MenuItem({
+    id: "dark",
+    label: "Dark",
+    type: "radio",
+    checked: false,
+    click: () => {
+      $(".button,.segment,.table,.menu").removeClass("inverted");
+      $(".button,.segment,.table,.menu").addClass("inverted");
+      $(".breadcrumb .divider").css("color", "white");
+      $("body").css("background", "#1b1c1d");
+    }
+  })
+]
+const topMenuItems = [
+  new MenuItem({
+    label: "New",
+    submenu: [
+      newDocumentMenuItem,
+      newFolderMenuItem,
+      projectMenuItem
+    ]
+  }),
+  new MenuItem({
+    id: "theme",
+    label: "Theme",
+    submenu: themeMenuItems
+  })
+];
+topMenuItems.forEach(menuItem => topMenu.append(menuItem));
+
 function init() {
+  Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(topMenu);
   window.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     rightClickPosition = {x: e.x, y: e.y};
