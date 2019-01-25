@@ -53,14 +53,28 @@ async function main() {
 }
 
 async function prompt(msg) {
-  $("#prompt-dimmer").dimmer("show");
+  const $pDimmer = $("#prompt-dimmer");
+  const $pInput = $("#prompt-input");
+  $pDimmer.dimmer("show");
+  $pDimmer.find("label").html(msg);
+  $pInput.focus();
+  return new Promise(resolve => {
+    $pInput.on("keyup", (e) => {
+      if ((e.key.toLowerCase() === "enter") || (e.key.toLowerCase() === "escape")) {
+        resolve((e.key.toLowerCase() === "enter") ? $pInput.val() : undefined);
+        $pDimmer.dimmer("hide");
+        $pDimmer.find("label").html("");
+        $pInput.val("");
+      }
+    });
+  });
 }
 
 function initDOM() {
   $("#run_cmd").on("click", async () => {
-    const cmds = prompt("Command:").split("&&").map(_ =>  _.trim());
+    const cmds = (await prompt("Command:")).split("&&").map(_ =>  _.trim());
     for (let i = 0; i < cmds.length; i++) {
-      await runVisual(cmd.split(" ")[0], cmd.split(" ").slice(1), i, cmds.length);
+      await runVisual(cmds[i].split(" ")[0], cmds[i].split(" ").slice(1), i, cmds.length);
     }
   });
 }

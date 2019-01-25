@@ -36,11 +36,11 @@ const projectMenuItem = new MenuItem({label: "Project", submenu: projectTemplate
 
 const isNavigatorElement = (elem) => $(elem).is("#file-nav *");
 
-const inspectMenuItem = new MenuItem({label: 'Inspect Element', click: () => remote.getCurrentWindow().inspectElement(rightClickPosition.x, rightClickPosition.y)});
+const inspectMenuItem = new MenuItem({label: 'Inspect', accelerator: 'CmdOrCtrl+Shift+I', click: () => remote.getCurrentWindow().inspectElement(rightClickPosition ? rightClickPosition.x : 0, rightClickPosition ? rightClickPosition.y : 0)});
 const addToFavouritesMenuItem = new MenuItem({label: 'Add to Favourites', click: (...args) => remote.getGlobal("providers").favourites.add($(targetElement).attr("path").split(path.sep).slice(-1)[0], $(targetElement).attr("path"))});
 const removeMenuItem = new MenuItem({label: 'Delete', click: (...args) => removeFile($(targetElement).attr("path"))});
-const newDocumentMenuItem = new MenuItem({label: 'Document', click: async (...args) => ls_n_focus(...await newFile(targetElement))});
-const newFolderMenuItem = new MenuItem({label: 'Folder', click: async (...args) => ls_n_focus(...await newFolder(targetElement))});
+const newDocumentMenuItem = new MenuItem({label: 'Document', accelerator: 'CmdOrCtrl+N', click: async (...args) => ls_n_focus(...await newFile(targetElement))});
+const newFolderMenuItem = new MenuItem({label: 'Folder', accelerator: 'CmdOrCtrl+Shift+N', click: async (...args) => ls_n_focus(...await newFolder(targetElement))});
 const newMenuItem = new MenuItem({label: 'New', submenu: [newDocumentMenuItem, newFolderMenuItem].concat(projectTemplates.length ? [projectMenuItem] : [])})
 const renameMenuItem = new MenuItem({label: 'Rename', click: async (...args) => ls_n_focus(...await renameFile(targetElement))});
 const navigatorMenuItems = [
@@ -126,6 +126,10 @@ const topMenuItems = [
     id: "theme",
     label: "Theme",
     submenu: themeMenuItems
+  }),
+  new MenuItem({
+    label: "View",
+    submenu: [inspectMenuItem]
   })
 ];
 topMenuItems.forEach(menuItem => topMenu.append(menuItem));
