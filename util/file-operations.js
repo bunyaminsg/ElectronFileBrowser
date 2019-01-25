@@ -8,7 +8,6 @@ const os = require("os");
 const promptUser = require("./common").promptUser;
 const {getAppDataFolder} = require("./operating-system");
 const {runVisual} = require('./bash');
-const $ = require("jquery");
 
 function writeFile(file_path, data, sync) {
   if (sync) {

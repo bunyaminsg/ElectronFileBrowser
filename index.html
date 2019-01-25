@@ -101,7 +101,10 @@
     <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
     <script src="node_modules/jquery/dist/jquery.min.js"></script>
     <script src="semantic/semantic.min.js"></script>
-    <script>$(".dropdown").dropdown()</script>
+    <script>
+      $(".dropdown").dropdown();
+      window.$ = $;
+    </script>
     <!-- Insert this line after script imports -->
     <script>if (window.module) module = window.module;</script>
     <script>

@@ -5,7 +5,6 @@ const path = require("path");
 const { remote } = require("electron");
 const os = require("os");
 const root = (os.platform == "win32") ? process.cwd().split(path.sep)[0] + path.sep : "/";
-const $ = require("jquery");
 const breadcrumb = require("./components/breadcrumb");
 const contextMenu = require("./components/context-menu");
 const search = require("./components/search");

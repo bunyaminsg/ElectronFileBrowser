@@ -5,7 +5,6 @@ const newFile = require("../util/file-operations").newFile;
 const removeFile = require("../util/file-operations").removeFile;
 const createProject = require("../util/file-operations").createProject;
 const ls = require("../components/navigator").ls;
-const $ = require("jquery");
 const renameFile = require("../util/file-operations").renameFile;
 const newFolder = require("../util/file-operations").newFolder;
 const {getOS, OS} = require("../util/operating-system");

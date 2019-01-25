@@ -3,7 +3,6 @@ const path = require("path");
 const {Subject} = require("rxjs");
 const {take, takeUntil} = require("rxjs/operators");
 const {remote} = require("electron");
-const $ = require("jquery");
 const fileSizeToString = require("../util/common").fileSizeToString;
 const createRow = require("../util/common").createRow;
 const promisify = require("../util/common").promisify;

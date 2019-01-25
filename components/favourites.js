@@ -1,7 +1,6 @@
 const { remote } = require("electron");
 const os = require("os");
 const path = require("path");
-const $ = require("jquery");
 const ls = require("./navigator").ls;
 const uuid = require("uuid");
 const showError = require("../util/common").showError;

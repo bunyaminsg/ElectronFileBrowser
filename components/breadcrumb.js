@@ -1,7 +1,6 @@
 const {remote} = require("electron");
 const path = require("path");
 const escapeHtml = require("../util/common").escapeHtml;
-const $ = require("jquery");
 
 function createBreadcrumbItems(dir) {
   const subpath = dir.split(path.sep);

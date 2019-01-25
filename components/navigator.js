@@ -1,4 +1,3 @@
-const $ = require("jquery");
 const path = require("path");
 const execSync = require("child_process").execSync;
 const {promisify, showError, fileSizeToString, escapePath} = require("../util/common");
