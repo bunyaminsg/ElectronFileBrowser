@@ -12,7 +12,7 @@ const navigator = require("./components/navigator");
 const favourites = require("./components/favourites");
 const ls = require("./components/navigator").ls;
 const keyHandler = require('./util/key-handler');
-const {runVisual} = require("./util/bash");
+const {runCommand, runVisual} = require("./util/bash");
 // console.log(favourites);
 
 const { ipcRenderer } = require( "electron" );
