@@ -7,6 +7,7 @@ const createProject = require("../util/file-operations").createProject;
 const ls = require("../components/navigator").ls;
 const renameFile = require("../util/file-operations").renameFile;
 const newFolder = require("../util/file-operations").newFolder;
+const {readAppDataFile, writeAppDataFile} = require("../util/file-operations");
 const {getOS, OS} = require("../util/operating-system");
 const os = require("os");
 const fs = require("fs");
@@ -87,32 +88,23 @@ favouritesMenuItems.forEach(menuItem => favouritesMenu.append(menuItem));
 
 /** Top Menu **/
 
+const themes = require("../themes");
+const applyTheme = (theme) => {
+  return () => {
+    theme.checked = true;
+    theme.classes.remove.forEach(el => $(el[0]).removeClass(el[1]));
+    theme.classes.add.forEach(el => $(el[0]).addClass(el[1]));
+    $("#theme").html(
+      theme.css.remove.map(el => `${el[0]} { ${el[1]}: "" }`)
+      .concat(theme.css.add.map(el => `${el[0]} { ${el[1]}: ${el[2]} }`))
+      .join(" ")
+    );
+    writeAppDataFile("themes.json", {selected: theme.id}).then((_err) => {
+      if (_err) showError(_err);
+    });
+  }
+}
 const topMenu = new Menu();
-const themeMenuItems = [
-  new MenuItem({
-    id: "default",
-    label: "Default",
-    type: "radio",
-    checked: true,
-    click: () => {
-      $(".button,.segment,.table,.menu").removeClass("inverted");
-      $(".breadcrumb .divider").css("color", "");
-      $("body").css("background", "");
-    }
-  }),
-  new MenuItem({
-    id: "dark",
-    label: "Dark",
-    type: "radio",
-    checked: false,
-    click: () => {
-      $(".button,.segment,.table,.menu").removeClass("inverted");
-      $(".button,.segment,.table,.menu").addClass("inverted");
-      $(".breadcrumb .divider").css("color", "white");
-      $("body").css("background", "#1b1c1d");
-    }
-  })
-]
 const topMenuItems = [
   new MenuItem({
     label: "New",
@@ -123,11 +115,6 @@ const topMenuItems = [
     ]
   }),
   new MenuItem({
-    id: "theme",
-    label: "Theme",
-    submenu: themeMenuItems
-  }),
-  new MenuItem({
     label: "View",
     submenu: [inspectMenuItem]
   })
@@ -135,6 +122,25 @@ const topMenuItems = [
 topMenuItems.forEach(menuItem => topMenu.append(menuItem));
 
 function init() {
+  const [err, themeConfigurations] = readAppDataFile("themes.json", true);
+  themes.forEach(theme => theme.checked = false);
+  if (!err && themeConfigurations && themeConfigurations.selected
+    && themes.filter(theme => theme.id === themeConfigurations.selected).length) {
+    applyTheme(themes.filter(theme => theme.id === themeConfigurations.selected)[0])();
+  } else {
+    applyTheme(themes[0])();
+  }
+
+  const themeMenuItem = new MenuItem({
+    id: "theme",
+    label: "Theme",
+    submenu: themes.map(theme => new MenuItem(Object.assign(theme, {
+      click: applyTheme(theme)
+    })))
+  });
+
+  topMenu.append(themeMenuItem);
+
   Menu.setApplicationMenu(null);
   Menu.setApplicationMenu(topMenu);
   window.addEventListener('contextmenu', (e) => {
