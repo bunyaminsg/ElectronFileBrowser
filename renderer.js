@@ -65,6 +65,7 @@ async function prompt(msg) {
         $pDimmer.dimmer("hide");
         $pDimmer.find("label").html("");
         $pInput.val("");
+        $pInput.off("keyup");
       }
     });
   });
@@ -74,7 +75,7 @@ function initDOM() {
   $("#run_cmd").on("click", async () => {
     const cmds = (await prompt("Command:")).split("&&").map(_ =>  _.trim());
     for (let i = 0; i < cmds.length; i++) {
-      await runVisual(cmds[i].split(" ")[0], cmds[i].split(" ").slice(1), i, cmds.length);
+      await runVisual(cmds[i].split(" ")[0], cmds[i].split(" ").slice(1), i, cmds.length - 1);
     }
   });
 }

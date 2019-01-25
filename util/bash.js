@@ -21,6 +21,7 @@ function runCommand (command, args, onData, onError, onExit) {
 exports.runCommand = runCommand;
 
 exports.runVisual = async function (command, args, index, last) {
+  console.log("Bash: ", command, args);
   return new Promise(resolve => {
     if (!index) {
       $("body").append(`<div id="bash-modal" class="ui modal"><div class="scrolling content"><pre style="white-space: pre-wrap"></pre></content></div>`);
@@ -32,20 +33,35 @@ exports.runVisual = async function (command, args, index, last) {
       $outputModal.modal('show');
     }
     $outputPanel.append(`<b>${command} ${args.join(" ")}</b><br>`);
-    runCommand(command, args, (data) => {
-      $outputPanel.append(`${data}<br>`);
-    }, (err) => {
-      $outputPanel.append(`<b style="color: red">${err}</b><br>`);
-    }, (exitCode) => {
-      $outputPanel.append(`Exited with code: ${exitCode}<br>`);
-      resolve(exitCode);
+    try {
+      runCommand(command, args, (data) => {
+        $outputPanel.append(`${data}<br>`);
+        $outputModal.modal('refresh');
+      }, (err) => {
+        $outputPanel.append(`<b style="color: red">${err}</b><br>`);
+        $outputModal.modal('refresh');
+      }, (exitCode) => {
+        $outputPanel.append(`Exited with code: ${exitCode}<br>`);
+        resolve(exitCode);
+        if (index === last) {
+          $outputModal.append(`<div class="actions"><button id="close-bash-modal" class="ui primary button">OK</button></div>`);
+          $outputModal.modal('refresh');
+          $("#close-bash-modal").on("click", () => {
+            $outputModal.modal("hide");
+            $outputModal.remove();
+          });
+        }
+      });
+    } catch (err) {
+      $outputPanel.append(`<b style="color: red">Command cannot be executed. ERROR: ${err}</b><br>`);
       if (index === last) {
         $outputModal.append(`<div class="actions"><button id="close-bash-modal" class="ui primary button">OK</button></div>`);
+        $outputModal.modal('refresh');
         $("#close-bash-modal").on("click", () => {
           $outputModal.modal("hide");
           $outputModal.remove();
         });
       }
-    });
+    }
   });
 }
