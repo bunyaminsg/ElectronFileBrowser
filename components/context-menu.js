@@ -123,7 +123,7 @@ topMenuItems.forEach(menuItem => topMenu.append(menuItem));
 
 function menuItem2SemanticItem(item, id, level) {
   if (!item.submenu || !item.submenu.items || !item.submenu.items.length) {
-    $("#" + id).append(`<div class="item" id="${item.id || item.label}">${item.label}</div>`);
+    $("#" + id).append(`<div class="${item.checked ? 'active' : ''} item" id="${item.id || item.label}">${item.label}</div>`);
     if (item.click) $("#" + (item.id || item.label)).on("click", () => item.click());
   }
   else {
