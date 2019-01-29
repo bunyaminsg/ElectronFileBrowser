@@ -27,7 +27,7 @@ async function ls_n_focus(success, newPath) {
 const projectTemplates = [];
 try {
   const nodeModules = fs.readdirSync((getOS() === OS.WINDOWS) ? path.join(os.homedir(), "AppData", "npm", "node_modules") : "/usr/local/lib/node_modules");
-  console.log(nodeModules);
+  // console.log(nodeModules);
   if (nodeModules.indexOf("@angular") > -1) projectTemplates.push(new MenuItem({label: "Angular", click: async () => ls_n_focus(...await createProject(targetElement, "angular"))}));
   if (nodeModules.indexOf("ionic") > -1) projectTemplates.push(new MenuItem({label: "Ionic", click: async () => ls_n_focus(...await createProject(targetElement, "ionic"))}));
 } catch (err) { console.log(err); }
@@ -121,6 +121,27 @@ const topMenuItems = [
 ];
 topMenuItems.forEach(menuItem => topMenu.append(menuItem));
 
+function menuItem2SemanticItem(item, id, level) {
+  if (!item.submenu || !item.submenu.items || !item.submenu.items.length) {
+    $("#" + id).append(`<div class="item" id="${item.id || item.label}">${item.label}</div>`);
+    if (item.click) $("#" + (item.id || item.label)).on("click", () => item.click());
+  }
+  else {
+    $("#" + id).append(`<div class="ui ${level ? 'left' : ''} pointing dropdown link item" id="${item.id || item.label}">
+        ${item.label}
+        <i class="dropdown icon"></i>
+        <div class="menu" id="${item.id || item.label}-menu">
+        </div>
+      </div>`);
+    item.submenu.items.forEach(subitem => menuItem2SemanticItem(subitem, (item.id || item.label) + '-menu', ++level));
+  }
+}
+
+function electronMenu2SemanticMenu(menu) {
+  menu.items.forEach(item => menuItem2SemanticItem(item, 'toolbar-menu', 0));
+  $(".dropdown").dropdown();
+}
+
 function init() {
   const [err, themeConfigurations] = readAppDataFile("themes.json", true);
   themes.forEach(theme => theme.checked = false);
@@ -143,6 +164,7 @@ function init() {
 
   Menu.setApplicationMenu(null);
   Menu.setApplicationMenu(topMenu);
+  electronMenu2SemanticMenu(topMenu);
   window.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     rightClickPosition = {x: e.x, y: e.y};
