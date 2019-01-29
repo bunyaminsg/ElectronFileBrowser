@@ -34,10 +34,28 @@
       .inverted .divider {
         color: white !important;
       }
+
+      .windowTitleBar {
+        -webkit-app-region: drag;
+      }
+
+      .windowTitleBar .item:not(.dragable) {
+        -webkit-app-region: no-drag;
+      }
     </style>
     <style id="theme"></style>
   </head>
   <body style="overflow: hidden;">
+    <div class="ui mini menu windowTitleBar" style="padding: 0; margin: 0">
+      <div class="borderless item logo dragable">
+        <i class="folder open icon"></i> ElectronFileBrowser
+      </div>
+      <div class="right menu">
+        <a class="icon item" id="toolbar-minimize"><i class="minus icon"></i></a>
+        <a class="icon item" id="toolbar-maximize"><i class="window restore outline icon"></i></a>
+        <a class="icon item" id="toolbar-exit"><i class="close icon"></i></a>
+      </div>
+    </div>
     <div id="prompt-dimmer" class="ui dimmer">
       <div class="content">
         <div class="ui segment">

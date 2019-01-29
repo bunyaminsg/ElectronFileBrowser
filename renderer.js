@@ -78,6 +78,21 @@ function initDOM() {
       await runVisual(cmds[i].split(" ")[0], cmds[i].split(" ").slice(1), i, cmds.length - 1);
     }
   });
+
+  $("#toolbar-exit").on("click", () => {
+    var window = remote.BrowserWindow.getFocusedWindow();
+    window.close();
+  });
+
+  $("#toolbar-minimize").on("click", () => {
+      var window = remote.BrowserWindow.getFocusedWindow();
+      window.minimize();
+  });
+
+  $("#toolbar-maximize").on("click", () => {
+      var window = remote.BrowserWindow.getFocusedWindow();
+      window.isMaximized() ? window.unmaximize() : window.maximize();
+  });
 }
 
 document.getElementById("back").onclick = function() {

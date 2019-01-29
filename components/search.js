@@ -7,7 +7,7 @@ const fileSizeToString = require("../util/common").fileSizeToString;
 const createRow = require("../util/common").createRow;
 const promisify = require("../util/common").promisify;
 const bindClickEvents = require("./navigator").bindClickEvents;
-
+const {ls} = require("./navigator");
 let searchCompleted;
 
 let appendedIndex = 0;
