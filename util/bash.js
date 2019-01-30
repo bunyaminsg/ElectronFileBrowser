@@ -1,21 +1,35 @@
 const spawn = require('child_process').spawn;
 const { remote } = require('electron');
 function runCommand (command, args, onData, onError, onExit) {
-  ls    = spawn(command, args, {
-    cwd: remote.getGlobal("current_dir")
-  });
+  try {
+    ls = spawn(command, args, {
+      cwd: remote.getGlobal("current_dir")
+    });
 
-  ls.stdout.on('data', function (data) {
-    onData && onData(data.toString());
-  });
+    ls.stdout.on('data', function (data) {
+      onData && onData(data.toString());
+    });
 
-  ls.stderr.on('data', function (data) {
-    onError && onError(data.toString());
-  });
+    ls.stderr.on('data', function (data) {
+      onError && onError(data.toString());
+    });
 
-  ls.on('exit', function (code) {
-    onExit && onExit(code.toString());
-  });
+    ls.on('error', function (err) {
+      if (err.code === 'ENOENT') {
+        onError && onError("Unrecognized command: " + command);
+      } else {
+        onError && onError(err.toString());
+      }
+      onExit && onExit();
+    });
+
+    ls.on('exit', function (code) {
+      onExit && onExit(code.toString());
+    });
+  } catch (err) {
+    onError && onError(err.toString());
+    onExit && onExit();
+  }
 }
 
 exports.runCommand = runCommand;

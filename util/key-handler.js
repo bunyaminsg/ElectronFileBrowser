@@ -15,7 +15,13 @@ exports.init = function() {
       altKey = true;
     } else if (e.key.toLowerCase() === "shift") {
       shiftKey = true;
-    } else if (e.key.toLowerCase() === "backspace" && !$("input:focus, *[contentEditable]:focus").length) {
+    } else if (e.key.toLowerCase() === "escape") {
+			$(".dimmer.modals").each(function () {
+				if (!$(this).find(".modal.visible,.modal.active").length) {
+					$(this).remove();
+				}
+			});
+		} else if (e.key.toLowerCase() === "backspace" && !$("input:focus, *[contentEditable]:focus").length) {
       ls(remote.getGlobal("current_dir").split(path.sep).slice(0, -1).join(path.sep) || remote.getGlobal("root_dir"), remote.getGlobal("hideHidden"));
     }
   });
