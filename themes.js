@@ -42,7 +42,31 @@ module.exports = [{
     ],
     remove: []
   }
-}/*, {
+},
+{
+  id: "pastel",
+  label: "Kokoş",
+  selected: false,
+  classes: {
+    remove: [],
+    add: []
+  },
+  css: {
+    add: [
+      [".ui.segment", "background",  "#F1828D"],
+      ["body,.ui.menu:not(.windowTitleBar)", "background", "#FCD0BA !important"],
+      [".windowTitleBar", "background",  "#8FB9A8 !important"],
+      [".ui.table thead, .ui.table thead th", "color", "white"],
+      [".ui.table thead, .ui.table thead th", "background", "#765D69"],
+      [".ui.table tbody", "background", "#FEFAD4"],
+      [".ui.table tbody", "color", "#333"],
+      ["*", "border-radius", "0 !important"],
+      ["*", "border", "0 !important"]
+    ],
+    remove: []
+  }
+}
+/*, {
     id: "forest",
     label: "Forest",
     selected: false,
