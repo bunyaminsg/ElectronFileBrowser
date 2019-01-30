@@ -91,6 +91,25 @@ favouritesMenuItems.forEach(menuItem => favouritesMenu.append(menuItem));
 const themes = require("../themes");
 const applyTheme = (theme) => {
   return () => {
+    if (topMenu.getMenuItemById("theme")) {
+      for (const item of topMenu.getMenuItemById("theme").submenu.items) {
+        if (item.checked && themes.filter(t => t.id === item.id).length) {
+          console.log("Reverting " + item.id);
+          item.checked = false;
+          const activeTheme = themes.filter(t => t.id === item.id)[0];
+          activeTheme.classes.add.forEach(el => $(el[0]).removeClass(el[1]));
+          activeTheme.classes.remove.forEach(el => $(el[0]).addClass(el[1]));
+          $("#theme").html("");
+          break;
+        }
+      }
+      for (const item of topMenu.getMenuItemById("theme").submenu.items) {
+        if (theme.id === item.id) {
+          item.checked = true;
+          break;
+        }
+      }
+    }
     theme.checked = true;
     theme.classes.remove.forEach(el => $(el[0]).removeClass(el[1]));
     theme.classes.add.forEach(el => $(el[0]).addClass(el[1]));

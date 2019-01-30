@@ -4,14 +4,11 @@ module.exports = [{
   selected: true,
   classes: {
     add: [],
-    remove: [[".button,.segment,.table,.menu", "inverted"]]
+    remove: []
   },
   css: {
     add: [],
-    remove: [
-      [".breadcrumb .divider", "color"],
-      ["body", "background"]
-    ]
+    remove: []
   }
 }, {
   id: "dark",
@@ -19,7 +16,7 @@ module.exports = [{
   selected: false,
   classes: {
     add: [[".button,.segment,.table,.menu", "inverted"]],
-    remove: [[".button,.segment,.table,.menu", "inverted blue"]]
+    remove: []
   },
   css: {
     add: [
@@ -33,7 +30,7 @@ module.exports = [{
   label: "Blue",
   selected: false,
   classes: {
-    remove: [[".button,.segment,.table,.menu", "inverted"]],
+    remove: [],
     add: [[".button,.segment,.table,.menu", "inverted"],[".table", "custom-blue"], [".menu, .segment", "blue"]]
   },
   css: {
@@ -45,4 +42,32 @@ module.exports = [{
     ],
     remove: []
   }
-}];
+}/*, {
+    id: "forest",
+    label: "Forest",
+    selected: false,
+    classes: {
+      remove: [],
+      add: [[".segment,.menu,.windowTitleBar", "inverted"],
+            [".button", "inverted"],
+            [".menu, .segment", "green"],
+            [".table", "custom-brown"],
+            [".windowTitleBar", "brown"]]
+    },
+    css: {
+      add: [
+        [".breadcrumb .divider", "color", "white"],
+        [".ui.breadcrumb .section:not(.active)", "color", "white"],
+        [".table.custom-brown", "background", "#966F33"],
+        [".table.custom-brown thead", "background", "#6E470B"],
+        [".table.custom-brown thead tr", "background", "#6E470B"],
+        [".table.custom-brown thead th", "background", "#6E470B"],
+        [".table.custom-brown thead th", "color", "#fec"],
+        [".table.custom-brown", "color", "#fec"],
+        [".table.custom-brown tbody", "background", "#AA8347"],
+        ["body", "background", "#00ba4f"]
+      ],
+      remove: []
+    }
+}*/
+];
