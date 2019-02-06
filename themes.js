@@ -44,7 +44,7 @@ module.exports = [{
     remove: []
   }
 },
-{
+/*{
   id: "pastel",
   label: "Kokoş",
   selected: false,
@@ -67,7 +67,7 @@ module.exports = [{
     remove: []
   }
 }
-/*, {
+, {
     id: "forest",
     label: "Forest",
     selected: false,
