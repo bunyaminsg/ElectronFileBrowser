@@ -35,6 +35,7 @@ module.exports = [{
   },
   css: {
     add: [
+      [".segment.blue", "border-color", "#59a !important"],
       [".breadcrumb .divider", "color", "white"],
       [".ui.breadcrumb .section:not(.active)", "color", "white"],
       [".ui.table.custom-blue", "background", "#5b91b9"],
