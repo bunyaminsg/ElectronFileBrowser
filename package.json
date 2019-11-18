@@ -13,7 +13,7 @@
     "package-linux": "electron-packager . ElectronFileBrowser --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icon.png --prune=true --out=../electron-file-browser-builds"
   },
   "dependencies": {
-    "jquery": "^3.3.1",
+    "jquery": "^3.4.0",
     "madge": "^3.4.2",
     "rxjs": "^6.3.3",
     "trash": "^4.3.0",
