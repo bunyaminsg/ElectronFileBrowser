@@ -1,6 +1,22 @@
 // Modules to control application life and create native browser window
 const {app, BrowserWindow} = require('electron');
 const { ipcMain } = require( "electron" );
+const path = require("path");
+let icon;
+
+switch (process.platform) {
+    case "darwin":
+      icon = "icon.icns";
+      break;
+    case "win32":
+    case "win64":
+      icon = "icon.ico";
+      break;
+    default:
+      icon = "icon.png";
+}
+
+icon = path.join(__dirname, "assets", icon);
 
 ipcMain.on( "setGlobal", ( event, global_var) => {
   global[global_var[0]] = global_var[1];
@@ -16,7 +32,7 @@ let mainWindow
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({width: 800, height: 600, frame: false,
-        webPreferences: {
+        icon: icon, webPreferences: {
             nodeIntegration: true
         }})
 
